@@ -1,67 +1,67 @@
-import { Token } from "aws-cdk-lib/core";
-import {
-  ErrorResponse,
-  DistributionProps,
-  BehaviorOptions,
-  IOrigin,
+import type {
+	BehaviorOptions,
+	DistributionProps,
+	ErrorResponse,
+	IOrigin,
 } from "aws-cdk-lib/aws-cloudfront";
+import { Token } from "aws-cdk-lib/core";
 
 export interface BaseSiteFileOptions {
-  files: string | string[];
-  ignore?: string | string[];
-  cacheControl?: string;
-  contentType?: string;
+	files: string | string[];
+	ignore?: string | string[];
+	cacheControl?: string;
+	contentType?: string;
 }
 
 export interface BaseSiteEnvironmentOutputsInfo {
-  path: string;
-  stack: string;
-  environmentOutputs: { [key: string]: string };
+	path: string;
+	stack: string;
+	environmentOutputs: { [key: string]: string };
 }
 
 export interface BaseSiteReplaceProps {
-  files: string;
-  search: string;
-  replace: string;
+	files: string;
+	search: string;
+	replace: string;
 }
 
 export function buildErrorResponsesForRedirectToIndex(
-  indexPage: string
+	indexPage: string,
 ): ErrorResponse[] {
-  return [
-    {
-      httpStatus: 403,
-      responsePagePath: `/${indexPage}`,
-      responseHttpStatus: 200,
-    },
-    {
-      httpStatus: 404,
-      responsePagePath: `/${indexPage}`,
-      responseHttpStatus: 200,
-    },
-  ];
+	return [
+		{
+			httpStatus: 403,
+			responsePagePath: `/${indexPage}`,
+			responseHttpStatus: 200,
+		},
+		{
+			httpStatus: 404,
+			responsePagePath: `/${indexPage}`,
+			responseHttpStatus: 200,
+		},
+	];
 }
 
 export function buildErrorResponsesFor404ErrorPage(
-  errorPage: string
+	errorPage: string,
 ): ErrorResponse[] {
-  return [
-    {
-      httpStatus: 403,
-      responsePagePath: `/${errorPage}`,
-    },
-    {
-      httpStatus: 404,
-      responsePagePath: `/${errorPage}`,
-    },
-  ];
+	return [
+		{
+			httpStatus: 403,
+			responsePagePath: `/${errorPage}`,
+		},
+		{
+			httpStatus: 404,
+			responsePagePath: `/${errorPage}`,
+		},
+	];
 }
 
 export interface BaseSiteCdkDistributionProps
-  extends Omit<DistributionProps, "defaultBehavior"> {
-  defaultBehavior?: Omit<BehaviorOptions, "origin"> & {
-    origin?: IOrigin;
-  };
+	extends Omit<DistributionProps, "defaultBehavior"> {
+	defaultBehavior?: Omit<BehaviorOptions, "origin"> & {
+		origin?: IOrigin;
+	};
 }
 
 /////////////////////
@@ -69,18 +69,18 @@ export interface BaseSiteCdkDistributionProps
 /////////////////////
 
 export function getBuildCmdEnvironment(siteEnvironment?: {
-  [key: string]: string;
+	[key: string]: string;
 }): Record<string, string> {
-  // Generate environment placeholders to be replaced
-  // ie. environment => { API_URL: api.url }
-  //     environment => API_URL="{{ API_URL }}"
-  //
-  const buildCmdEnvironment: Record<string, string> = {};
-  Object.entries(siteEnvironment || {}).forEach(([key, value]) => {
-    buildCmdEnvironment[key] = Token.isUnresolved(value)
-      ? `{{ ${key} }}`
-      : value;
-  });
+	// Generate environment placeholders to be replaced
+	// ie. environment => { API_URL: api.url }
+	//     environment => API_URL="{{ API_URL }}"
+	//
+	const buildCmdEnvironment: Record<string, string> = {};
+	Object.entries(siteEnvironment || {}).forEach(([key, value]) => {
+		buildCmdEnvironment[key] = Token.isUnresolved(value)
+			? `{{ ${key} }}`
+			: value;
+	});
 
-  return buildCmdEnvironment;
+	return buildCmdEnvironment;
 }

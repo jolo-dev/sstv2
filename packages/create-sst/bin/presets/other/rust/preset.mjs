@@ -1,3 +1,3 @@
-import { extract, extend } from "create-sst";
+import { extend, extract } from "create-sst";
 
 export default [extend("presets/base/typescript"), extract()];

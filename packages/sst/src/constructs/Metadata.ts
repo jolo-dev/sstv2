@@ -1,7 +1,7 @@
-import { SSTConstruct } from "./Construct.js";
+import type { SSTConstruct } from "./Construct.js";
 
 type ExtractMetadata<T extends SSTConstruct> = ReturnType<
-  T["getConstructMetadata"]
+	T["getConstructMetadata"]
 > & { id: string; addr: string; stack: string };
 
 import type { Api } from "./Api.js";
@@ -28,8 +28,8 @@ export type EventBusMetadata = ExtractMetadata<EventBus>;
 import type { Function as Fn } from "./Function.js";
 import type { SsrFunction } from "./SsrFunction.js";
 export type FunctionMetadata =
-  | ExtractMetadata<Fn>
-  | ExtractMetadata<SsrFunction>;
+	| ExtractMetadata<Fn>
+	| ExtractMetadata<SsrFunction>;
 
 import type { KinesisStream } from "./KinesisStream.js";
 export type KinesisStreamMetadata = ExtractMetadata<KinesisStream>;
@@ -85,31 +85,31 @@ import type { SolidStartSite } from "./SolidStartSite.js";
 export type SolidStartSiteMetadata = ExtractMetadata<SolidStartSite>;
 
 export type SSRSiteMetadata =
-  | NextjsSiteMetadata
-  | AstroSiteMetadata
-  | RemixSiteMetadata
-  | SolidStartSiteMetadata
-  | SvelteKitSiteMetadata;
+	| NextjsSiteMetadata
+	| AstroSiteMetadata
+	| RemixSiteMetadata
+	| SolidStartSiteMetadata
+	| SvelteKitSiteMetadata;
 
 export type Metadata =
-  | ApiMetadata
-  | ApiGatewayV1ApiMetadata
-  | CognitoMetadata
-  | AppSyncApiMetadata
-  | BucketMetadata
-  | CronMetadata
-  | EventBusMetadata
-  | FunctionMetadata
-  | KinesisStreamMetadata
-  | SlsNextjsMetadata
-  | QueueMetadata
-  | StaticSiteMetadata
-  | TableMetadata
-  | TopicMetadata
-  | WebSocketApiMetadata
-  | RDSMetadata
-  | AuthMetadata
-  | ScriptMetadata
-  | JobMetadata
-  | SSRSiteMetadata
-  | ServiceMetadata;
+	| ApiMetadata
+	| ApiGatewayV1ApiMetadata
+	| CognitoMetadata
+	| AppSyncApiMetadata
+	| BucketMetadata
+	| CronMetadata
+	| EventBusMetadata
+	| FunctionMetadata
+	| KinesisStreamMetadata
+	| SlsNextjsMetadata
+	| QueueMetadata
+	| StaticSiteMetadata
+	| TableMetadata
+	| TopicMetadata
+	| WebSocketApiMetadata
+	| RDSMetadata
+	| AuthMetadata
+	| ScriptMetadata
+	| JobMetadata
+	| SSRSiteMetadata
+	| ServiceMetadata;

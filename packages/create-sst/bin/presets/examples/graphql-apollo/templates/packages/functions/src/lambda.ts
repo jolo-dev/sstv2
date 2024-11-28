@@ -1,4 +1,4 @@
-import { gql, ApolloServer } from "apollo-server-lambda";
+import { ApolloServer, gql } from "apollo-server-lambda";
 
 const typeDefs = gql`
   type Query {
@@ -7,15 +7,15 @@ const typeDefs = gql`
 `;
 
 const resolvers = {
-  Query: {
-    hello: () => "Hello, New World!",
-  },
+	Query: {
+		hello: () => "Hello, New World!",
+	},
 };
 
 const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-  introspection: !!process.env.IS_LOCAL,
+	typeDefs,
+	resolvers,
+	introspection: !!process.env.IS_LOCAL,
 });
 
 export const handler = server.createHandler();

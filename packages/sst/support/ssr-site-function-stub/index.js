@@ -1,5 +1,3 @@
-"use strict";
-
 exports.handler = () => {
-  // placeholder function
+	// placeholder function
 };

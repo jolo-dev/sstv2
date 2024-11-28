@@ -1,7 +1,7 @@
 import { createProxy } from "../util/index.js";
 
-export interface TableResources {}
+export type TableResources = {};
 
 export const Table =
-  /* @__PURE__ */
-  createProxy<TableResources>("Table");
+	/* @__PURE__ */
+	createProxy<TableResources>("Table");

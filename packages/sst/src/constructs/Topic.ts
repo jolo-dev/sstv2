@@ -1,32 +1,32 @@
 import {
-  ITopic,
-  Subscription,
-  Topic as AWSTopic,
-  TopicProps as AWSTopicProps,
+	Topic as AWSTopic,
+	type TopicProps as AWSTopicProps,
+	type ITopic,
+	type Subscription,
 } from "aws-cdk-lib/aws-sns";
 import {
-  LambdaSubscription,
-  LambdaSubscriptionProps,
-  SqsSubscription,
-  SqsSubscriptionProps,
+	LambdaSubscription,
+	type LambdaSubscriptionProps,
+	SqsSubscription,
+	type SqsSubscriptionProps,
 } from "aws-cdk-lib/aws-sns-subscriptions";
 import { Construct } from "constructs";
-import { App } from "./App.js";
+import type { App } from "./App.js";
 import {
-  getFunctionRef,
-  SSTConstruct,
-  isCDKConstruct,
-  isCDKConstructOf,
+	type SSTConstruct,
+	getFunctionRef,
+	isCDKConstruct,
+	isCDKConstructOf,
 } from "./Construct.js";
 import {
-  Function as Fn,
-  FunctionProps,
-  FunctionInlineDefinition,
-  FunctionDefinition,
+	Function as Fn,
+	type FunctionDefinition,
+	type FunctionInlineDefinition,
+	type FunctionProps,
 } from "./Function.js";
 import { Queue } from "./Queue.js";
-import { BindingResource, BindingProps } from "./util/binding.js";
-import { Permissions } from "./util/permission.js";
+import type { BindingProps, BindingResource } from "./util/binding.js";
+import type { Permissions } from "./util/permission.js";
 
 /////////////////////
 // Interfaces
@@ -50,20 +50,20 @@ import { Permissions } from "./util/permission.js";
  * ```
  */
 export interface TopicQueueSubscriberProps {
-  /**
-   * String literal to signify that the subscriber is a queue
-   */
-  type: "queue";
-  /**
-   * The queue that'll be added as a subscriber to the topic.
-   */
-  queue: Queue;
-  cdk?: {
-    /**
-     * This allows you to override the default settings this construct uses internally to create the subscriber.
-     */
-    subscription?: SqsSubscriptionProps;
-  };
+	/**
+	 * String literal to signify that the subscriber is a queue
+	 */
+	type: "queue";
+	/**
+	 * The queue that'll be added as a subscriber to the topic.
+	 */
+	queue: Queue;
+	cdk?: {
+		/**
+		 * This allows you to override the default settings this construct uses internally to create the subscriber.
+		 */
+		subscription?: SqsSubscriptionProps;
+	};
 }
 
 /**
@@ -79,71 +79,71 @@ export interface TopicQueueSubscriberProps {
  * ```
  */
 export interface TopicFunctionSubscriberProps {
-  /**
-   * String literal to signify that the subscriber is a function
-   */
-  type?: "function";
-  /**
-   * Used to create the subscriber function for the topic
-   */
-  function: FunctionDefinition;
-  cdk?: {
-    /**
-     * This allows you to override the default settings this construct uses internally to create the subscriber.
-     */
-    subscription?: LambdaSubscriptionProps;
-  };
+	/**
+	 * String literal to signify that the subscriber is a function
+	 */
+	type?: "function";
+	/**
+	 * Used to create the subscriber function for the topic
+	 */
+	function: FunctionDefinition;
+	cdk?: {
+		/**
+		 * This allows you to override the default settings this construct uses internally to create the subscriber.
+		 */
+		subscription?: LambdaSubscriptionProps;
+	};
 }
 
 export interface TopicProps {
-  defaults?: {
-    /**
-     * The default function props to be applied to all the consumers in the Topic. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
-     *
-     * @example
-     *
-     * ```js
-     * new Topic(stack, "Topic", {
-     *   defaults: {
-     *     function: {
-     *       timeout: 20,
-     *     }
-     *   },
-     * });
-     * ```
-     */
-    function?: FunctionProps;
-  };
-  /**
-   * Configure subscribers for this topic
-   *
-   * @example
-   * ```js
-   * new Topic(stack, "Topic", {
-   *   subscribers: {
-   *     subscriber1: "src/function1.handler",
-   *     subscriber2: "src/function2.handler"
-   *   },
-   * });
-   * ```
-   */
-  subscribers?: Record<
-    string,
-    | FunctionInlineDefinition
-    | TopicFunctionSubscriberProps
-    | Queue
-    | TopicQueueSubscriberProps
-  >;
-  cdk?: {
-    /**
-     * Allows you to override default id for this construct.
-     */
-    id?: string;
-    /**
-     * Override the default settings this construct uses internally to create the topic.
-     */
-    topic?: ITopic | AWSTopicProps;
-  };
+	defaults?: {
+		/**
+		 * The default function props to be applied to all the consumers in the Topic. The `environment`, `permissions` and `layers` properties will be merged with per route definitions if they are defined.
+		 *
+		 * @example
+		 *
+		 * ```js
+		 * new Topic(stack, "Topic", {
+		 *   defaults: {
+		 *     function: {
+		 *       timeout: 20,
+		 *     }
+		 *   },
+		 * });
+		 * ```
+		 */
+		function?: FunctionProps;
+	};
+	/**
+	 * Configure subscribers for this topic
+	 *
+	 * @example
+	 * ```js
+	 * new Topic(stack, "Topic", {
+	 *   subscribers: {
+	 *     subscriber1: "src/function1.handler",
+	 *     subscriber2: "src/function2.handler"
+	 *   },
+	 * });
+	 * ```
+	 */
+	subscribers?: Record<
+		string,
+		| FunctionInlineDefinition
+		| TopicFunctionSubscriberProps
+		| Queue
+		| TopicQueueSubscriberProps
+	>;
+	cdk?: {
+		/**
+		 * Allows you to override default id for this construct.
+		 */
+		id?: string;
+		/**
+		 * Override the default settings this construct uses internally to create the topic.
+		 */
+		topic?: ITopic | AWSTopicProps;
+	};
 }
 
 /////////////////////
@@ -167,334 +167,334 @@ export interface TopicProps {
  * ```
  */
 export class Topic extends Construct implements SSTConstruct {
-  public readonly id: string;
-  public readonly cdk: {
-    /**
-     * The internally created CDK `Topic` instance.
-     */
-    topic: ITopic;
-  };
-  private subscribers: Record<string, Fn | Queue> = {};
-  private bindingForAllSubscribers: BindingResource[] = [];
-  private permissionsAttachedForAllSubscribers: Permissions[] = [];
-  private props: TopicProps;
+	public readonly id: string;
+	public readonly cdk: {
+		/**
+		 * The internally created CDK `Topic` instance.
+		 */
+		topic: ITopic;
+	};
+	private subscribers: Record<string, Fn | Queue> = {};
+	private bindingForAllSubscribers: BindingResource[] = [];
+	private permissionsAttachedForAllSubscribers: Permissions[] = [];
+	private props: TopicProps;
 
-  constructor(scope: Construct, id: string, props?: TopicProps) {
-    super(scope, props?.cdk?.id || id);
+	constructor(scope: Construct, id: string, props?: TopicProps) {
+		super(scope, props?.cdk?.id || id);
 
-    this.id = id;
-    this.props = props || {};
-    this.cdk = {} as any;
+		this.id = id;
+		this.props = props || {};
+		this.cdk = {} as any;
 
-    this.createTopic();
-    this.addSubscribers(this, props?.subscribers || {});
+		this.createTopic();
+		this.addSubscribers(this, props?.subscribers || {});
 
-    const app = this.node.root as App;
-    app.registerTypes(this);
-  }
+		const app = this.node.root as App;
+		app.registerTypes(this);
+	}
 
-  /**
-   * The ARN of the internally created SNS Topic.
-   */
-  public get topicArn(): string {
-    return this.cdk.topic.topicArn;
-  }
+	/**
+	 * The ARN of the internally created SNS Topic.
+	 */
+	public get topicArn(): string {
+		return this.cdk.topic.topicArn;
+	}
 
-  /**
-   * The name of the internally created SNS Topic.
-   */
-  public get topicName(): string {
-    return this.cdk.topic.topicName;
-  }
+	/**
+	 * The name of the internally created SNS Topic.
+	 */
+	public get topicName(): string {
+		return this.cdk.topic.topicName;
+	}
 
-  /**
-   * Get a list of subscriptions for this topic
-   */
-  public get subscriptions(): Subscription[] {
-    return Object.values(this.subscribers).map((sub) => {
-      let children;
-      // look for sns.Subscription inside Queue.sqsQueue
-      if (sub instanceof Queue) {
-        children = sub.cdk.queue.node.children;
-      }
-      // look for sns.Subscription inside Function
-      else {
-        children = sub.node.children;
-      }
+	/**
+	 * Get a list of subscriptions for this topic
+	 */
+	public get subscriptions(): Subscription[] {
+		return Object.values(this.subscribers).map((sub) => {
+			let children;
+			// look for sns.Subscription inside Queue.sqsQueue
+			if (sub instanceof Queue) {
+				children = sub.cdk.queue.node.children;
+			}
+			// look for sns.Subscription inside Function
+			else {
+				children = sub.node.children;
+			}
 
-      const child = children.find((child) => {
-        return isCDKConstructOf(
-          child as Construct,
-          "aws-cdk-lib.aws_sns.Subscription"
-        );
-      });
-      return child as Subscription;
-    });
-  }
+			const child = children.find((child) => {
+				return isCDKConstructOf(
+					child as Construct,
+					"aws-cdk-lib.aws_sns.Subscription",
+				);
+			});
+			return child as Subscription;
+		});
+	}
 
-  /**
-   * A list of the internally created function instances for the subscribers.
-   */
-  public get subscriberFunctions(): Fn[] {
-    return Object.values(this.subscribers).filter(
-      (subscriber) => subscriber instanceof Fn
-    ) as Fn[];
-  }
+	/**
+	 * A list of the internally created function instances for the subscribers.
+	 */
+	public get subscriberFunctions(): Fn[] {
+		return Object.values(this.subscribers).filter(
+			(subscriber) => subscriber instanceof Fn,
+		) as Fn[];
+	}
 
-  /**
-   * Add subscribers to the topic.
-   *
-   * @example
-   * ```js
-   * const topic = new Topic(stack, "Topic", {
-   *   subscribers: {
-   *     subscriber1: "src/function1.handler",
-   *     subscriber2: "src/function2.handler"
-   *   },
-   * });
-   * topic.addSubscribers(stack, {
-   *   subscriber3: "src/function3.handler"
-   * });
-   * ```
-   */
-  public addSubscribers(
-    scope: Construct,
-    subscribers: {
-      [subscriberName: string]:
-        | FunctionInlineDefinition
-        | TopicFunctionSubscriberProps
-        | Queue
-        | TopicQueueSubscriberProps;
-    }
-  ): void {
-    Object.entries(subscribers).forEach(([subscriberName, subscriber]) => {
-      this.addSubscriber(scope, subscriberName, subscriber);
-    });
-  }
+	/**
+	 * Add subscribers to the topic.
+	 *
+	 * @example
+	 * ```js
+	 * const topic = new Topic(stack, "Topic", {
+	 *   subscribers: {
+	 *     subscriber1: "src/function1.handler",
+	 *     subscriber2: "src/function2.handler"
+	 *   },
+	 * });
+	 * topic.addSubscribers(stack, {
+	 *   subscriber3: "src/function3.handler"
+	 * });
+	 * ```
+	 */
+	public addSubscribers(
+		scope: Construct,
+		subscribers: {
+			[subscriberName: string]:
+				| FunctionInlineDefinition
+				| TopicFunctionSubscriberProps
+				| Queue
+				| TopicQueueSubscriberProps;
+		},
+	): void {
+		Object.entries(subscribers).forEach(([subscriberName, subscriber]) => {
+			this.addSubscriber(scope, subscriberName, subscriber);
+		});
+	}
 
-  /**
-   * Binds the given list of resources to all the subscriber functions.
-   *
-   * @example
-   *
-   * ```js
-   * const topic = new Topic(stack, "Topic", {
-   *   subscribers: {
-   *     subscriber1: "src/function1.handler",
-   *     subscriber2: "src/function2.handler"
-   *   },
-   * });
-   * topic.bind([STRIPE_KEY, bucket]);
-   * ```
-   */
-  public bind(constructs: BindingResource[]) {
-    Object.values(this.subscribers)
-      .filter((subscriber) => subscriber instanceof Fn)
-      .forEach((subscriber) => subscriber.bind(constructs));
-    this.bindingForAllSubscribers.push(...constructs);
-  }
+	/**
+	 * Binds the given list of resources to all the subscriber functions.
+	 *
+	 * @example
+	 *
+	 * ```js
+	 * const topic = new Topic(stack, "Topic", {
+	 *   subscribers: {
+	 *     subscriber1: "src/function1.handler",
+	 *     subscriber2: "src/function2.handler"
+	 *   },
+	 * });
+	 * topic.bind([STRIPE_KEY, bucket]);
+	 * ```
+	 */
+	public bind(constructs: BindingResource[]) {
+		Object.values(this.subscribers)
+			.filter((subscriber) => subscriber instanceof Fn)
+			.forEach((subscriber) => subscriber.bind(constructs));
+		this.bindingForAllSubscribers.push(...constructs);
+	}
 
-  /**
-   * Binds the given list of resources to a specific subscriber.
-   * @example
-   * ```js {8}
-   * const topic = new Topic(stack, "Topic", {
-   *   subscribers: {
-   *     subscriber1: "src/function1.handler",
-   *     subscriber2: "src/function2.handler"
-   *   },
-   * });
-   *
-   * topic.bindToSubscriber("subscriber1", [STRIPE_KEY, bucket]);
-   * ```
-   */
-  public bindToSubscriber(
-    subscriberName: string,
-    constructs: BindingResource[]
-  ): void {
-    const subscriber = this.subscribers[subscriberName];
-    if (!(subscriber instanceof Fn)) {
-      throw new Error(
-        `Cannot bind to the "${this.node.id}" Topic subscriber because it's not a Lambda function`
-      );
-    }
-    subscriber.bind(constructs);
-  }
+	/**
+	 * Binds the given list of resources to a specific subscriber.
+	 * @example
+	 * ```js {8}
+	 * const topic = new Topic(stack, "Topic", {
+	 *   subscribers: {
+	 *     subscriber1: "src/function1.handler",
+	 *     subscriber2: "src/function2.handler"
+	 *   },
+	 * });
+	 *
+	 * topic.bindToSubscriber("subscriber1", [STRIPE_KEY, bucket]);
+	 * ```
+	 */
+	public bindToSubscriber(
+		subscriberName: string,
+		constructs: BindingResource[],
+	): void {
+		const subscriber = this.subscribers[subscriberName];
+		if (!(subscriber instanceof Fn)) {
+			throw new Error(
+				`Cannot bind to the "${this.node.id}" Topic subscriber because it's not a Lambda function`,
+			);
+		}
+		subscriber.bind(constructs);
+	}
 
-  /**
-   * Attaches the given list of permissions to all the subscriber functions. This allows the subscribers to access other AWS resources.
-   *
-   * @example
-   *
-   * ```js
-   * const topic = new Topic(stack, "Topic", {
-   *   subscribers: {
-   *     subscriber1: "src/function1.handler",
-   *     subscriber2: "src/function2.handler"
-   *   },
-   * });
-   * topic.attachPermissions(["s3"]);
-   * ```
-   */
-  public attachPermissions(permissions: Permissions) {
-    Object.values(this.subscribers)
-      .filter((subscriber) => subscriber instanceof Fn)
-      .forEach((subscriber) => subscriber.attachPermissions(permissions));
-    this.permissionsAttachedForAllSubscribers.push(permissions);
-  }
+	/**
+	 * Attaches the given list of permissions to all the subscriber functions. This allows the subscribers to access other AWS resources.
+	 *
+	 * @example
+	 *
+	 * ```js
+	 * const topic = new Topic(stack, "Topic", {
+	 *   subscribers: {
+	 *     subscriber1: "src/function1.handler",
+	 *     subscriber2: "src/function2.handler"
+	 *   },
+	 * });
+	 * topic.attachPermissions(["s3"]);
+	 * ```
+	 */
+	public attachPermissions(permissions: Permissions) {
+		Object.values(this.subscribers)
+			.filter((subscriber) => subscriber instanceof Fn)
+			.forEach((subscriber) => subscriber.attachPermissions(permissions));
+		this.permissionsAttachedForAllSubscribers.push(permissions);
+	}
 
-  /**
-   * Attaches the list of permissions to a specific subscriber.
-   * @example
-   * ```js {8}
-   * const topic = new Topic(stack, "Topic", {
-   *   subscribers: {
-   *     subscriber1: "src/function1.handler",
-   *     subscriber2: "src/function2.handler"
-   *   },
-   * });
-   *
-   * topic.attachPermissionsToSubscriber("subscriber1", ["s3"]);
-   * ```
-   */
-  public attachPermissionsToSubscriber(
-    subscriberName: string,
-    permissions: Permissions
-  ): void {
-    const subscriber = this.subscribers[subscriberName];
-    if (!(subscriber instanceof Fn)) {
-      throw new Error(
-        `Cannot attach permissions to the "${this.node.id}" Topic subscriber because it's not a Lambda function`
-      );
-    }
-    subscriber.attachPermissions(permissions);
-  }
+	/**
+	 * Attaches the list of permissions to a specific subscriber.
+	 * @example
+	 * ```js {8}
+	 * const topic = new Topic(stack, "Topic", {
+	 *   subscribers: {
+	 *     subscriber1: "src/function1.handler",
+	 *     subscriber2: "src/function2.handler"
+	 *   },
+	 * });
+	 *
+	 * topic.attachPermissionsToSubscriber("subscriber1", ["s3"]);
+	 * ```
+	 */
+	public attachPermissionsToSubscriber(
+		subscriberName: string,
+		permissions: Permissions,
+	): void {
+		const subscriber = this.subscribers[subscriberName];
+		if (!(subscriber instanceof Fn)) {
+			throw new Error(
+				`Cannot attach permissions to the "${this.node.id}" Topic subscriber because it's not a Lambda function`,
+			);
+		}
+		subscriber.attachPermissions(permissions);
+	}
 
-  public getConstructMetadata() {
-    return {
-      type: "Topic" as const,
-      data: {
-        topicArn: this.cdk.topic.topicArn,
-        // TODO: Deprecate eventually and mirror KinesisStream
-        subscribers: Object.values(this.subscribers).map(getFunctionRef),
-        subscriberNames: Object.keys(this.subscribers),
-      },
-    };
-  }
+	public getConstructMetadata() {
+		return {
+			type: "Topic" as const,
+			data: {
+				topicArn: this.cdk.topic.topicArn,
+				// TODO: Deprecate eventually and mirror KinesisStream
+				subscribers: Object.values(this.subscribers).map(getFunctionRef),
+				subscriberNames: Object.keys(this.subscribers),
+			},
+		};
+	}
 
-  /** @internal */
-  public getBindings(): BindingProps {
-    return {
-      clientPackage: "topic",
-      variables: {
-        topicArn: {
-          type: "plain",
-          value: this.topicArn,
-        },
-      },
-      permissions: {
-        "sns:*": [this.topicArn],
-      },
-    };
-  }
+	/** @internal */
+	public getBindings(): BindingProps {
+		return {
+			clientPackage: "topic",
+			variables: {
+				topicArn: {
+					type: "plain",
+					value: this.topicArn,
+				},
+			},
+			permissions: {
+				"sns:*": [this.topicArn],
+			},
+		};
+	}
 
-  private createTopic() {
-    const app = this.node.root as App;
-    const { cdk } = this.props;
+	private createTopic() {
+		const app = this.node.root as App;
+		const { cdk } = this.props;
 
-    if (isCDKConstruct(cdk?.topic)) {
-      this.cdk.topic = cdk?.topic as AWSTopic;
-    } else {
-      const snsTopicProps = (cdk?.topic || {}) as TopicProps;
-      this.cdk.topic = new AWSTopic(this, "Topic", {
-        topicName: app.logicalPrefixedName(this.node.id),
-        ...snsTopicProps,
-      });
-    }
-  }
+		if (isCDKConstruct(cdk?.topic)) {
+			this.cdk.topic = cdk?.topic as AWSTopic;
+		} else {
+			const snsTopicProps = (cdk?.topic || {}) as TopicProps;
+			this.cdk.topic = new AWSTopic(this, "Topic", {
+				topicName: app.logicalPrefixedName(this.node.id),
+				...snsTopicProps,
+			});
+		}
+	}
 
-  private addSubscriber(
-    scope: Construct,
-    subscriberName: string,
-    subscriber:
-      | FunctionInlineDefinition
-      | TopicFunctionSubscriberProps
-      | Queue
-      | TopicQueueSubscriberProps
-  ): void {
-    if (
-      subscriber instanceof Queue ||
-      (subscriber as TopicQueueSubscriberProps).queue
-    ) {
-      subscriber = subscriber as Queue | TopicQueueSubscriberProps;
-      this.addQueueSubscriber(scope, subscriberName, subscriber);
-    } else {
-      subscriber = subscriber as
-        | FunctionInlineDefinition
-        | TopicFunctionSubscriberProps;
-      this.addFunctionSubscriber(scope, subscriberName, subscriber);
-    }
-  }
+	private addSubscriber(
+		scope: Construct,
+		subscriberName: string,
+		subscriber:
+			| FunctionInlineDefinition
+			| TopicFunctionSubscriberProps
+			| Queue
+			| TopicQueueSubscriberProps,
+	): void {
+		if (
+			subscriber instanceof Queue ||
+			(subscriber as TopicQueueSubscriberProps).queue
+		) {
+			subscriber = subscriber as Queue | TopicQueueSubscriberProps;
+			this.addQueueSubscriber(scope, subscriberName, subscriber);
+		} else {
+			subscriber = subscriber as
+				| FunctionInlineDefinition
+				| TopicFunctionSubscriberProps;
+			this.addFunctionSubscriber(scope, subscriberName, subscriber);
+		}
+	}
 
-  private addQueueSubscriber(
-    _scope: Construct,
-    subscriberName: string,
-    subscriber: Queue | TopicQueueSubscriberProps
-  ): void {
-    // Parse subscriber props
-    let subscriptionProps;
-    let queue;
-    if (subscriber instanceof Queue) {
-      subscriber = subscriber as Queue;
-      queue = subscriber;
-    } else {
-      subscriber = subscriber as TopicQueueSubscriberProps;
-      subscriptionProps = subscriber.cdk?.subscription;
-      queue = subscriber.queue;
-    }
-    this.subscribers[subscriberName] = queue;
+	private addQueueSubscriber(
+		_scope: Construct,
+		subscriberName: string,
+		subscriber: Queue | TopicQueueSubscriberProps,
+	): void {
+		// Parse subscriber props
+		let subscriptionProps;
+		let queue;
+		if (subscriber instanceof Queue) {
+			subscriber = subscriber as Queue;
+			queue = subscriber;
+		} else {
+			subscriber = subscriber as TopicQueueSubscriberProps;
+			subscriptionProps = subscriber.cdk?.subscription;
+			queue = subscriber.queue;
+		}
+		this.subscribers[subscriberName] = queue;
 
-    // Create Subscription
-    this.cdk.topic.addSubscription(
-      new SqsSubscription(queue.cdk.queue, subscriptionProps)
-    );
-  }
+		// Create Subscription
+		this.cdk.topic.addSubscription(
+			new SqsSubscription(queue.cdk.queue, subscriptionProps),
+		);
+	}
 
-  private addFunctionSubscriber(
-    scope: Construct,
-    subscriberName: string,
-    subscriber: FunctionInlineDefinition | TopicFunctionSubscriberProps
-  ): void {
-    // Parse subscriber props
-    let subscriptionProps;
-    let functionDefinition;
-    if (typeof subscriber !== "string" && "function" in subscriber) {
-      subscriptionProps = subscriber.cdk?.subscription;
-      functionDefinition = subscriber.function;
-    } else {
-      subscriber = subscriber as FunctionInlineDefinition;
-      functionDefinition = subscriber;
-    }
+	private addFunctionSubscriber(
+		scope: Construct,
+		subscriberName: string,
+		subscriber: FunctionInlineDefinition | TopicFunctionSubscriberProps,
+	): void {
+		// Parse subscriber props
+		let subscriptionProps;
+		let functionDefinition;
+		if (typeof subscriber !== "string" && "function" in subscriber) {
+			subscriptionProps = subscriber.cdk?.subscription;
+			functionDefinition = subscriber.function;
+		} else {
+			subscriber = subscriber as FunctionInlineDefinition;
+			functionDefinition = subscriber;
+		}
 
-    // Create function
-    const fn = Fn.fromDefinition(
-      scope,
-      `Subscriber_${this.node.id}_${subscriberName}`,
-      functionDefinition,
-      this.props.defaults?.function,
-      `The "defaults.function" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the subscribers using FunctionProps, so the Topic construct can apply the "defaults.function" to them.`
-    );
-    this.subscribers[subscriberName] = fn;
+		// Create function
+		const fn = Fn.fromDefinition(
+			scope,
+			`Subscriber_${this.node.id}_${subscriberName}`,
+			functionDefinition,
+			this.props.defaults?.function,
+			`The "defaults.function" cannot be applied if an instance of a Function construct is passed in. Make sure to define all the subscribers using FunctionProps, so the Topic construct can apply the "defaults.function" to them.`,
+		);
+		this.subscribers[subscriberName] = fn;
 
-    // Create Subscription
-    this.cdk.topic.addSubscription(
-      new LambdaSubscription(fn, subscriptionProps)
-    );
+		// Create Subscription
+		this.cdk.topic.addSubscription(
+			new LambdaSubscription(fn, subscriptionProps),
+		);
 
-    // Attach existing permissions
-    this.permissionsAttachedForAllSubscribers.forEach((permissions) =>
-      fn.attachPermissions(permissions)
-    );
-    fn.bind(this.bindingForAllSubscribers);
-  }
+		// Attach existing permissions
+		this.permissionsAttachedForAllSubscribers.forEach((permissions) =>
+			fn.attachPermissions(permissions),
+		);
+		fn.bind(this.bindingForAllSubscribers);
+	}
 }

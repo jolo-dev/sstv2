@@ -7,22 +7,22 @@
 
 <script>
 export default {
-  data() {
-    return {
-      count: 0,
-    };
-  },
-  methods: {
-    onClick() {
-      fetch(process.env.VUE_APP_API_URL, {
-        method: "POST",
-      })
-        .then((response) => response.text())
-        .then((data) => {
-          this.count = data;
-        });
-    },
-  },
+	data() {
+		return {
+			count: 0,
+		};
+	},
+	methods: {
+		onClick() {
+			fetch(process.env.VUE_APP_API_URL, {
+				method: "POST",
+			})
+				.then((response) => response.text())
+				.then((data) => {
+					this.count = data;
+				});
+		},
+	},
 };
 </script>
 

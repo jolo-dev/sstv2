@@ -1,4 +1,4 @@
 export async function handler() {
-  console.log("Message 1 processed!");
-  return {};
+	console.log("Message 1 processed!");
+	return {};
 }

@@ -1,34 +1,34 @@
-import { Bucket, StackContext } from "sst/constructs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import { Bucket, type StackContext } from "sst/constructs";
 
 export function ExampleStack({ stack }: StackContext) {
-  // Create a new bucket
-  const bucket = new Bucket(stack, "Bucket", {
-    notifications: {
-      resize: {
-        function: {
-          handler: "packages/functions/src/resize.main",
-          nodejs: {
-            esbuild: {
-              external: ["sharp"],
-            },
-          },
-          layers: [
-            new lambda.LayerVersion(stack, "SharpLayer", {
-              code: lambda.Code.fromAsset("layers/sharp"),
-            }),
-          ],
-        },
-        events: ["object_created"],
-      },
-    },
-  });
+	// Create a new bucket
+	const bucket = new Bucket(stack, "Bucket", {
+		notifications: {
+			resize: {
+				function: {
+					handler: "packages/functions/src/resize.main",
+					nodejs: {
+						esbuild: {
+							external: ["sharp"],
+						},
+					},
+					layers: [
+						new lambda.LayerVersion(stack, "SharpLayer", {
+							code: lambda.Code.fromAsset("layers/sharp"),
+						}),
+					],
+				},
+				events: ["object_created"],
+			},
+		},
+	});
 
-  // Allow the notification functions to access the bucket
-  bucket.attachPermissions([bucket]);
+	// Allow the notification functions to access the bucket
+	bucket.attachPermissions([bucket]);
 
-  // Show the endpoint in the output
-  stack.addOutputs({
-    BucketName: bucket.bucketName,
-  });
+	// Show the endpoint in the output
+	stack.addOutputs({
+		BucketName: bucket.bucketName,
+	});
 }

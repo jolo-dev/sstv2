@@ -4,8 +4,8 @@ import { RDS } from "sst/node/rds";
 import * as schema from "./schema";
 
 export const db = drizzle(new RDSDataClient(), {
-  database: RDS.db.defaultDatabaseName,
-  secretArn: RDS.db.secretArn,
-  resourceArn: RDS.db.clusterArn,
-  schema,
+	database: RDS.db.defaultDatabaseName,
+	secretArn: RDS.db.secretArn,
+	resourceArn: RDS.db.clusterArn,
+	schema,
 });

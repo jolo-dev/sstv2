@@ -1,9 +1,15 @@
-import querystring from 'node:querystring';
-import { BaseClient, generators, Issuer } from 'openid-client';
+import querystring from "node:querystring";
+import { type BaseClient, Issuer, generators } from "openid-client";
 
-import { useBody, useCookie, useDomainName, usePathParam, useResponse } from '../../../api/index.js';
-import { Adapter } from './adapter.js';
-import { OauthBasicConfig } from './oauth.js';
+import {
+	useBody,
+	useCookie,
+	useDomainName,
+	usePathParam,
+	useResponse,
+} from "../../../api/index.js";
+import type { Adapter } from "./adapter.js";
+import type { OauthBasicConfig } from "./oauth.js";
 
 // This adapter support the OAuth flow with the response_mode "form_post" for now.
 // More details about the flow:
@@ -16,89 +22,94 @@ import { OauthBasicConfig } from './oauth.js';
 let issuer: Issuer<BaseClient>;
 
 type AppleConfig = OauthBasicConfig & {
-  issuer?: Issuer
-}
+	issuer?: Issuer;
+};
 
 export const AppleAdapter =
-  /* @__PURE__ */
-  (config: AppleConfig) => {
+	/* @__PURE__ */
+	(config: AppleConfig) => {
+		return (async () => {
+			const doesConfigHasIssuer = config.issuer !== undefined;
+			if (!doesConfigHasIssuer && !issuer) {
+				issuer = await Issuer.discover(
+					"https://appleid.apple.com/.well-known/openid-configuration",
+				);
+			}
+			const step = usePathParam("step");
+			const callback = "https://" + useDomainName() + "/callback";
+			console.log("callback", callback);
 
-    return async function () {
-      const doesConfigHasIssuer = config.issuer !== undefined
-      if(!doesConfigHasIssuer && !issuer){
-        issuer = await Issuer.discover("https://appleid.apple.com/.well-known/openid-configuration");
-      }
-      const step = usePathParam("step");
-      const callback = "https://" + useDomainName() + "/callback";
-      console.log("callback", callback);
+			const client = new (issuer as Issuer<BaseClient>).Client({
+				client_id: config.clientID,
+				client_secret: config.clientSecret,
+				redirect_uris: [callback],
+				response_types: ["code"],
+			});
 
-      const client = new (issuer as Issuer<BaseClient>).Client({
-        client_id: config.clientID,
-        client_secret: config.clientSecret,
-        redirect_uris: [callback],
-        response_types: ["code"],
-      });
+			if (step === "authorize" || step === "connect") {
+				const code_verifier = generators.codeVerifier();
+				const state = generators.state();
+				const code_challenge = generators.codeChallenge(code_verifier);
 
-      if (step === "authorize" || step === "connect") {
-        const code_verifier = generators.codeVerifier();
-        const state = generators.state();
-        const code_challenge = generators.codeChallenge(code_verifier);
+				const url = client.authorizationUrl({
+					scope: config.scope,
+					code_challenge: code_challenge,
+					code_challenge_method: "S256",
+					state,
+					prompt: config.prompt,
+					...config.params,
+				});
 
-        const url = client.authorizationUrl({
-          scope: config.scope,
-          code_challenge: code_challenge,
-          code_challenge_method: "S256",
-          state,
-          prompt: config.prompt,
-          ...config.params,
-        });
+				useResponse().cookies(
+					{
+						auth_code_verifier: code_verifier,
+						auth_state: state,
+					},
+					{
+						httpOnly: true,
+						secure: true,
+						maxAge: 60 * 10,
+						sameSite: "None",
+					},
+				);
+				return {
+					type: "step",
+					properties: {
+						statusCode: 302,
+						headers: {
+							location: url,
+						},
+					},
+				};
+			}
 
-        useResponse().cookies(
-          {
-            auth_code_verifier: code_verifier,
-            auth_state: state,
-          },
-          {
-            httpOnly: true,
-            secure: true,
-            maxAge: 60 * 10,
-            sameSite: "None",
-          }
-        );
-        return {
-          type: "step",
-          properties: {
-            statusCode: 302,
-            headers: {
-              location: url,
-            },
-          },
-        };
-      }
+			if (step === "callback") {
+				let params = {};
+				if (
+					config &&
+					config.params &&
+					config.params.response_mode === "form_post"
+				) {
+					const body = useBody();
+					if (typeof body === "string") {
+						params = querystring.parse(body);
+					}
+				}
 
-      if (step === "callback") {
-        let params = {}
-        if (config && config.params && config.params.response_mode === "form_post") {
-          const body = useBody()
-          if (typeof body === "string") {
-            params = querystring.parse(body)
-          }
-        }
-
-        const code_verifier = useCookie("auth_code_verifier");
-        const state = useCookie("auth_state");
-        const tokenset = await client["callback"](callback, params, {
-          code_verifier,
-          state,
-        });
-        const x = {
-          type: "success" as const,
-          properties: {
-            tokenset,
-            client,
-          },
-        };
-        return x;
-      }
-    } satisfies Adapter;
-  };
+				const code_verifier = useCookie("auth_code_verifier");
+				const state = useCookie("auth_state");
+				const tokenset = await client["callback"](callback, params, {
+					code_verifier,
+					state,
+				});
+				const x = {
+					type: "success" as const,
+					properties: {
+						tokenset,
+						client,
+					},
+				};
+				return x;
+			}
+		}) satisfies Adapter;
+	};

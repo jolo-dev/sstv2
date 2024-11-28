@@ -1,6 +1,6 @@
 export async function main() {
-  return {
-    statusCode: 200,
-    body: "Hello stranger!",
-  };
+	return {
+		statusCode: 200,
+		body: "Hello stranger!",
+	};
 }

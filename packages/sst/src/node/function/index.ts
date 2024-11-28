@@ -1,6 +1,6 @@
 import { createProxy } from "../util/index.js";
 
-export interface FunctionResources {}
+export type FunctionResources = {};
 
 export const Function =
-  /* @__PURE__ */ createProxy<FunctionResources>("Function");
+	/* @__PURE__ */ createProxy<FunctionResources>("Function");

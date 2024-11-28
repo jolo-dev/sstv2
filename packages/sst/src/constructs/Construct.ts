@@ -1,77 +1,77 @@
-import { Construct } from "constructs";
-import { Stack as CDKStack } from "aws-cdk-lib/core";
 import { Function as Fn } from "aws-cdk-lib/aws-lambda";
+import type { Stack as CDKStack } from "aws-cdk-lib/core";
+import type { Construct } from "constructs";
 import { Stack } from "./Stack.js";
-import { BindingProps } from "./util/binding.js";
+import type { BindingProps } from "./util/binding.js";
 
 const JSII_RTTI_SYMBOL_1 = Symbol.for("jsii.rtti");
 
 export interface SSTConstructMetadata<
-  T extends string = string,
-  D extends Record<string, any> = Record<string, any>,
-  L extends Record<string, any> = Record<string, any>
+	T extends string = string,
+	D extends Record<string, any> = Record<string, any>,
+	L extends Record<string, any> = Record<string, any>,
 > {
-  type: T;
-  data: D;
-  local?: L;
+	type: T;
+	data: D;
+	local?: L;
 }
 
 export interface SSTConstruct extends Construct {
-  id: string;
-  getConstructMetadata(): SSTConstructMetadata;
-  getBindings(): BindingProps | undefined;
+	id: string;
+	getConstructMetadata(): SSTConstructMetadata;
+	getBindings(): BindingProps | undefined;
 }
 
 export function getFunctionRef(fn?: any) {
-  if (!fn) return undefined;
-  if (!(fn instanceof Fn)) return undefined;
-  return {
-    node: fn.node.addr,
-    stack: Stack.of(fn).stackName,
-  };
+	if (!fn) return undefined;
+	if (!(fn instanceof Fn)) return undefined;
+	return {
+		node: fn.node.addr,
+		stack: Stack.of(fn).stackName,
+	};
 }
 
 export function isConstruct(construct: any) {
-  return isSSTConstruct(construct) || isCDKConstruct(construct);
+	return isSSTConstruct(construct) || isCDKConstruct(construct);
 }
 export function isStackConstruct(construct: any): construct is CDKStack {
-  return isCDKConstructOf(construct, "aws-cdk-lib.Stack");
+	return isCDKConstructOf(construct, "aws-cdk-lib.Stack");
 }
 
 export function isSSTConstruct(construct: any): construct is SSTConstruct {
-  return typeof construct === "object" && "getConstructMetadata" in construct;
+	return typeof construct === "object" && "getConstructMetadata" in construct;
 }
 
 export function isSSTDebugStack(construct: any): construct is CDKStack {
-  return (
-    isStackConstruct(construct) && construct.constructor.name === "DebugStack"
-  );
+	return (
+		isStackConstruct(construct) && construct.constructor.name === "DebugStack"
+	);
 }
 
 export function isCDKConstructOf(
-  construct: any,
-  moduleName: string
+	construct: any,
+	moduleName: string,
 ): construct is Construct {
-  // We need to check if construct is an CDK construct. To do that:
-  // - we cannot use the `construct instanceof` check because ie. the PolicyStatement
-  //   instance in the user's app might come from a different npm package version
-  // - we cannot use the `construct.constructor.name` check because the constructor
-  //   name can be prefixed with a number ie. PolicyStatement2
-  //
-  // Therefore we are going to get the constructor's fqn. The constructor for a CDK
-  // construct looks like:
-  //    [class Bucket2 extends BucketBase] {
-  //      [Symbol(jsii.rtti)]: { fqn: '@aws-cdk/aws-s3.Bucket', version: '1.91.0' }
-  //    }
-  // We will check against `fqn`.
-  const fqn = construct?.constructor?.[JSII_RTTI_SYMBOL_1]?.fqn;
-  return typeof fqn === "string" && fqn === moduleName;
+	// We need to check if construct is an CDK construct. To do that:
+	// - we cannot use the `construct instanceof` check because ie. the PolicyStatement
+	//   instance in the user's app might come from a different npm package version
+	// - we cannot use the `construct.constructor.name` check because the constructor
+	//   name can be prefixed with a number ie. PolicyStatement2
+	//
+	// Therefore we are going to get the constructor's fqn. The constructor for a CDK
+	// construct looks like:
+	//    [class Bucket2 extends BucketBase] {
+	//      [Symbol(jsii.rtti)]: { fqn: '@aws-cdk/aws-s3.Bucket', version: '1.91.0' }
+	//    }
+	// We will check against `fqn`.
+	const fqn = construct?.constructor?.[JSII_RTTI_SYMBOL_1]?.fqn;
+	return typeof fqn === "string" && fqn === moduleName;
 }
 
 export function isCDKConstruct(construct: any): construct is Construct {
-  const fqn = construct?.constructor?.[JSII_RTTI_SYMBOL_1]?.fqn;
-  return (
-    typeof fqn === "string" &&
-    (fqn.startsWith("@aws-cdk/") || fqn.startsWith("aws-cdk-lib"))
-  );
+	const fqn = construct?.constructor?.[JSII_RTTI_SYMBOL_1]?.fqn;
+	return (
+		typeof fqn === "string" &&
+		(fqn.startsWith("@aws-cdk/") || fqn.startsWith("aws-cdk-lib"))
+	);
 }

@@ -1,7 +1,7 @@
 import { createProxy } from "../util/index.js";
 
-export interface ServiceResources {}
+export type ServiceResources = {};
 
 export const Service =
-  /* @__PURE__ */
-  createProxy<ServiceResources>("Service");
+	/* @__PURE__ */
+	createProxy<ServiceResources>("Service");

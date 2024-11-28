@@ -1,15 +1,15 @@
 {
-  "name": "@@app",
-  "version": "0.0.0",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "dev": "sst dev",
-    "build": "sst build",
-    "deploy": "sst deploy",
-    "remove": "sst remove",
-    "console": "sst console"
-  },
-  "devDependencies": {},
-  "workspaces": []
+	"name": "@@app",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "sst dev",
+		"build": "sst build",
+		"deploy": "sst deploy",
+		"remove": "sst remove",
+		"console": "sst console"
+	},
+	"devDependencies": {},
+	"workspaces": []
 }

@@ -1,13 +1,13 @@
 import { Construct } from "constructs";
-import { SSTConstruct } from "./Construct.js";
-import { App } from "./App.js";
-import { BindingProps } from "./util/binding.js";
+import type { App } from "./App.js";
+import type { SSTConstruct } from "./Construct.js";
+import type { BindingProps } from "./util/binding.js";
 
 export interface ParameterProps {
-  /**
-   * Value of the parameter
-   */
-  value: string;
+	/**
+	 * Value of the parameter
+	 */
+	value: string;
 }
 
 /**
@@ -23,54 +23,54 @@ export interface ParameterProps {
  * ```
  */
 export class Parameter extends Construct implements SSTConstruct {
-  public readonly id: string;
-  public readonly name: string;
-  public readonly value: string;
+	public readonly id: string;
+	public readonly name: string;
+	public readonly value: string;
 
-  constructor(scope: Construct, id: string, props: ParameterProps) {
-    super(scope, id);
+	constructor(scope: Construct, id: string, props: ParameterProps) {
+		super(scope, id);
 
-    this.id = id;
-    this.name = id;
-    this.value = props.value;
+		this.id = id;
+		this.name = id;
+		this.value = props.value;
 
-    const app = this.node.root as App;
-    app.registerTypes(this);
-  }
+		const app = this.node.root as App;
+		app.registerTypes(this);
+	}
 
-  /** @internal */
-  public getConstructMetadata() {
-    return {
-      type: "Parameter" as const,
-      data: {
-        name: this.name,
-      },
-    };
-  }
+	/** @internal */
+	public getConstructMetadata() {
+		return {
+			type: "Parameter" as const,
+			data: {
+				name: this.name,
+			},
+		};
+	}
 
-  /** @internal */
-  public getBindings(): BindingProps {
-    return {
-      clientPackage: "config",
-      variables: {
-        value: {
-          type: "plain",
-          value: this.value,
-        },
-      },
-      permissions: {},
-    };
-  }
+	/** @internal */
+	public getBindings(): BindingProps {
+		return {
+			clientPackage: "config",
+			variables: {
+				value: {
+					type: "plain",
+					value: this.value,
+				},
+			},
+			permissions: {},
+		};
+	}
 
-  public static create<T extends Record<string, any>>(
-    scope: Construct,
-    parameters: T
-  ) {
-    const result: Record<string, Parameter> = {};
-    for (const [name, value] of Object.entries(parameters)) {
-      result[name] = new Parameter(scope, name, { value });
-    }
+	public static create<T extends Record<string, any>>(
+		scope: Construct,
+		parameters: T,
+	) {
+		const result: Record<string, Parameter> = {};
+		for (const [name, value] of Object.entries(parameters)) {
+			result[name] = new Parameter(scope, name, { value });
+		}
 
-    return result as { [key in keyof T]: Parameter };
-  }
+		return result as { [key in keyof T]: Parameter };
+	}
 }

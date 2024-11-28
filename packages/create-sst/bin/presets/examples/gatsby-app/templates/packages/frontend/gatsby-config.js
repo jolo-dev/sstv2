@@ -1,7 +1,7 @@
 module.exports = {
-  siteMetadata: {
-    siteUrl: "https://www.yourdomain.tld",
-    title: "frontend",
-  },
-  plugins: [],
+	siteMetadata: {
+		siteUrl: "https://www.yourdomain.tld",
+		title: "frontend",
+	},
+	plugins: [],
 };

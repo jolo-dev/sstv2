@@ -1,18 +1,16 @@
 {
-  "name": "@@app",
-  "scripts": {
-    "dev": "sst bind solid-start dev",
-    "build": "solid-start build",
-    "start": "solid-start start",
-    "sst:deploy": "sst deploy",
-    "sst:dev": "sst dev"
-  },
-  "type": "module",
-  "devDependencies": {
-  },
-  "dependencies": {
-  },
-  "engines": {
-    "node": ">=16.8"
-  }
+	"name": "@@app",
+	"scripts": {
+		"dev": "sst bind solid-start dev",
+		"build": "solid-start build",
+		"start": "solid-start start",
+		"sst:deploy": "sst deploy",
+		"sst:dev": "sst dev"
+	},
+	"type": "module",
+	"devDependencies": {},
+	"dependencies": {},
+	"engines": {
+		"node": ">=16.8"
+	}
 }

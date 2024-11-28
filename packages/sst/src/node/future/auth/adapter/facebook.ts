@@ -1,5 +1,5 @@
 import { Issuer } from "openid-client";
-import { OauthAdapter, OauthBasicConfig } from "./oauth.js";
+import { OauthAdapter, type OauthBasicConfig } from "./oauth.js";
 
 // Facebook's OIDC flow returns "id_token" as uri hash in redirect uri. Hashes
 // are not passed to Lambda event object. It is likely that Facebook only wants
@@ -13,18 +13,18 @@ import { OauthAdapter, OauthBasicConfig } from "./oauth.js";
 // await Issuer.discover("https://www.facebook.com/.well-known/openid-configuration/");
 
 const issuer = new Issuer({
-  issuer: "https://www.facebook.com",
-  authorization_endpoint: "https://facebook.com/dialog/oauth/",
-  jwks_uri: "https://www.facebook.com/.well-known/oauth/openid/jwks/",
-  token_endpoint: "https://graph.facebook.com/oauth/access_token",
-  userinfo_endpoint: "https://graph.facebook.com/oauth/access_token",
+	issuer: "https://www.facebook.com",
+	authorization_endpoint: "https://facebook.com/dialog/oauth/",
+	jwks_uri: "https://www.facebook.com/.well-known/oauth/openid/jwks/",
+	token_endpoint: "https://graph.facebook.com/oauth/access_token",
+	userinfo_endpoint: "https://graph.facebook.com/oauth/access_token",
 });
 
 export const FacebookAdapter =
-  /* @__PURE__ */
-  (config: OauthBasicConfig) => {
-    return OauthAdapter({
-      issuer,
-      ...config,
-    });
-  };
+	/* @__PURE__ */
+	(config: OauthBasicConfig) => {
+		return OauthAdapter({
+			issuer,
+			...config,
+		});
+	};

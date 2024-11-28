@@ -1,56 +1,56 @@
-import { createSigner, createVerifier, SignerOptions } from "fast-jwt";
-import { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
+import type { APIGatewayProxyStructuredResultV2 } from "aws-lambda";
+import { type SignerOptions, createSigner, createVerifier } from "fast-jwt";
 import { Context } from "../../context/context2.js";
+import { useContextType } from "../../context/handler.js";
 import { useCookie, useHeader } from "../api/index.js";
 import { getPrivateKey, getPublicKey } from "./auth.js";
-import { useContextType } from "../../context/handler.js";
 
 export interface SessionTypes {
-  public: {};
+	public: {};
 }
 
 export type SessionValue = {
-  [type in keyof SessionTypes]: {
-    type: type;
-    properties: SessionTypes[type];
-  };
+	[type in keyof SessionTypes]: {
+		type: type;
+		properties: SessionTypes[type];
+	};
 }[keyof SessionTypes];
 
 const SessionMemo = /* @__PURE__ */ Context.memo(() => {
-  // Get the context type and hooks that match that type
-  let token = "";
+	// Get the context type and hooks that match that type
+	let token = "";
 
-  const header = useHeader("authorization")!;
-  if (header) token = header.substring(7);
+	const header = useHeader("authorization")!;
+	if (header) token = header.substring(7);
 
-  const ctxType = useContextType();
-  const cookie = ctxType === "api" ? useCookie("auth-token") : undefined;
-  if (cookie) token = cookie;
+	const ctxType = useContextType();
+	const cookie = ctxType === "api" ? useCookie("auth-token") : undefined;
+	if (cookie) token = cookie;
 
-  // WebSocket may also set the token in the protocol header
-  // TODO: Once https://github.com/sst/sst/pull/2838 is merged,
-  // then we should no longer need to check both casing for the header.
-  const wsProtocol =
-    ctxType === "ws"
-      ? useHeader("sec-websocket-protocol") ||
-        useHeader("Sec-WebSocket-Protocol")
-      : undefined;
-  if (wsProtocol) token = wsProtocol.split(",")[0].trim();
+	// WebSocket may also set the token in the protocol header
+	// TODO: Once https://github.com/sst/sst/pull/2838 is merged,
+	// then we should no longer need to check both casing for the header.
+	const wsProtocol =
+		ctxType === "ws"
+			? useHeader("sec-websocket-protocol") ||
+				useHeader("Sec-WebSocket-Protocol")
+			: undefined;
+	if (wsProtocol) token = wsProtocol.split(",")[0].trim();
 
-  if (token) {
-    return Session.verify(token);
-  }
+	if (token) {
+		return Session.verify(token);
+	}
 
-  return {
-    type: "public",
-    properties: {},
-  };
+	return {
+		type: "public",
+		properties: {},
+	};
 });
 
 // This is a crazy TS hack to prevent the types from being evaluated too soon
 export function useSession<T = SessionValue>() {
-  const ctx = SessionMemo();
-  return ctx as T;
+	const ctx = SessionMemo();
+	return ctx as T;
 }
 
 /**
@@ -67,20 +67,20 @@ export function useSession<T = SessionValue>() {
  * ```
  */
 function create<T extends keyof SessionTypes>(input: {
-  type: T;
-  properties: SessionTypes[T];
-  options?: Partial<SignerOptions>;
+	type: T;
+	properties: SessionTypes[T];
+	options?: Partial<SignerOptions>;
 }) {
-  const signer = createSigner({
-    ...input.options,
-    key: getPrivateKey(),
-    algorithm: "RS512",
-  });
-  const token = signer({
-    type: input.type,
-    properties: input.properties,
-  });
-  return token as string;
+	const signer = createSigner({
+		...input.options,
+		key: getPrivateKey(),
+		algorithm: "RS512",
+	});
+	const token = signer({
+		type: input.type,
+		properties: input.properties,
+	});
+	return token as string;
 }
 
 /**
@@ -92,19 +92,19 @@ function create<T extends keyof SessionTypes>(input: {
  * ```
  */
 function verify<T = SessionValue>(token: string) {
-  if (token) {
-    try {
-      const jwt = createVerifier({
-        algorithms: ["RS512"],
-        key: getPublicKey(),
-      })(token);
-      return jwt as T;
-    } catch (e) {}
-  }
-  return {
-    type: "public",
-    properties: {},
-  };
+	if (token) {
+		try {
+			const jwt = createVerifier({
+				algorithms: ["RS512"],
+				key: getPublicKey(),
+			})(token);
+			return jwt as T;
+		} catch (e) {}
+	}
+	return {
+		type: "public",
+		properties: {},
+	};
 }
 
 /**
@@ -122,24 +122,24 @@ function verify<T = SessionValue>(token: string) {
  * ```
  */
 export function cookie<T extends keyof SessionTypes>(input: {
-  type: T;
-  properties: SessionTypes[T];
-  redirect: string;
-  options?: Partial<SignerOptions>;
+	type: T;
+	properties: SessionTypes[T];
+	redirect: string;
+	options?: Partial<SignerOptions>;
 }): APIGatewayProxyStructuredResultV2 {
-  const token = create(input);
-  const expires = new Date(
-    Date.now() + (input.options?.expiresIn || 1000 * 60 * 60 * 24 * 7)
-  );
-  return {
-    statusCode: 302,
-    headers: {
-      location: input.redirect,
-    },
-    cookies: [
-      `auth-token=${token}; HttpOnly; SameSite=None; Secure; Path=/; Expires=${expires}`,
-    ],
-  };
+	const token = create(input);
+	const expires = new Date(
+		Date.now() + (input.options?.expiresIn || 1000 * 60 * 60 * 24 * 7),
+	);
+	return {
+		statusCode: 302,
+		headers: {
+			location: input.redirect,
+		},
+		cookies: [
+			`auth-token=${token}; HttpOnly; SameSite=None; Secure; Path=/; Expires=${expires}`,
+		],
+	};
 }
 
 /**
@@ -157,23 +157,23 @@ export function cookie<T extends keyof SessionTypes>(input: {
  * ```
  */
 export function parameter<T extends keyof SessionTypes>(input: {
-  type: T;
-  redirect: string;
-  properties: SessionTypes[T];
-  options?: Partial<SignerOptions>;
+	type: T;
+	redirect: string;
+	properties: SessionTypes[T];
+	options?: Partial<SignerOptions>;
 }): APIGatewayProxyStructuredResultV2 {
-  const token = create(input);
-  return {
-    statusCode: 302,
-    headers: {
-      location: input.redirect + "?token=" + token,
-    },
-  };
+	const token = create(input);
+	return {
+		statusCode: 302,
+		headers: {
+			location: input.redirect + "?token=" + token,
+		},
+	};
 }
 
 export const Session = {
-  create,
-  verify,
-  cookie,
-  parameter,
+	create,
+	verify,
+	cookie,
+	parameter,
 };

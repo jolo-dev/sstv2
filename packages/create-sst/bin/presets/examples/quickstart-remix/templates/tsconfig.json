@@ -1,25 +1,25 @@
 {
-  "include": ["**/*.ts", "**/*.tsx"],
-  "compilerOptions": {
-    "types": ["@remix-run/node", "vite/client"],
-    "skipLibCheck": true,
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "lib": ["DOM", "DOM.Iterable", "ES2019"],
-    "isolatedModules": true,
-    "esModuleInterop": true,
-    "jsx": "react-jsx",
-    "resolveJsonModule": true,
-    "target": "ES2019",
-    "strict": true,
-    "allowJs": true,
-    "forceConsistentCasingInFileNames": true,
-    "baseUrl": ".",
-    "paths": {
-      "~/*": ["./app/*"]
-    },
+	"include": ["**/*.ts", "**/*.tsx"],
+	"compilerOptions": {
+		"types": ["@remix-run/node", "vite/client"],
+		"skipLibCheck": true,
+		"module": "ESNext",
+		"moduleResolution": "Bundler",
+		"lib": ["DOM", "DOM.Iterable", "ES2019"],
+		"isolatedModules": true,
+		"esModuleInterop": true,
+		"jsx": "react-jsx",
+		"resolveJsonModule": true,
+		"target": "ES2019",
+		"strict": true,
+		"allowJs": true,
+		"forceConsistentCasingInFileNames": true,
+		"baseUrl": ".",
+		"paths": {
+			"~/*": ["./app/*"]
+		},
 
-    // Remix takes care of building everything in `remix build`.
-    "noEmit": true
-  }
+		// Remix takes care of building everything in `remix build`.
+		"noEmit": true
+	}
 }

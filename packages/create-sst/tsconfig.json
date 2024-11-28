@@ -1,5 +1,5 @@
 {
-  "compilerOptions": {
-    "types": ["@preset/core/globals"]
-  }
+	"compilerOptions": {
+		"types": ["@preset/core/globals"]
+	}
 }

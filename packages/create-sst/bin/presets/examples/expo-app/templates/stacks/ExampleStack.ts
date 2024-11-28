@@ -1,28 +1,28 @@
-import { StackContext, Table, Api } from "sst/constructs";
+import { Api, type StackContext, Table } from "sst/constructs";
 
 export function ExampleStack({ stack }: StackContext) {
-  const table = new Table(stack, "Counter", {
-    fields: {
-      counter: "string",
-    },
-    primaryIndex: { partitionKey: "counter" },
-  });
+	const table = new Table(stack, "Counter", {
+		fields: {
+			counter: "string",
+		},
+		primaryIndex: { partitionKey: "counter" },
+	});
 
-  // Create a HTTP API
-  const api = new Api(stack, "Api", {
-    defaults: {
-      function: {
-        // Bind the table name to our API
-        bind: [table],
-      },
-    },
-    routes: {
-      "POST /": "packages/functions/src/lambda.main",
-    },
-  });
+	// Create a HTTP API
+	const api = new Api(stack, "Api", {
+		defaults: {
+			function: {
+				// Bind the table name to our API
+				bind: [table],
+			},
+		},
+		routes: {
+			"POST /": "packages/functions/src/lambda.main",
+		},
+	});
 
-  // Show the URLs in the output
-  stack.addOutputs({
-    ApiEndpoint: api.url,
-  });
+	// Show the URLs in the output
+	stack.addOutputs({
+		ApiEndpoint: api.url,
+	});
 }

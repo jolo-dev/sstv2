@@ -12,6 +12,6 @@ export * from "./adapter/link.js";
 
 import { createProxy } from "../util/index.js";
 
-export interface AuthResources {}
+export type AuthResources = {};
 
 export const Auth = createProxy<AuthResources>("Auth");

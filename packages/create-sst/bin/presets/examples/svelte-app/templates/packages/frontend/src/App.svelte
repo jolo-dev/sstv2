@@ -1,15 +1,15 @@
 <script>
-  let count = 0;
+let count = 0;
 
-  function onClick() {
-    fetch(import.meta.env.VITE_APP_API_URL, {
-      method: "POST",
-    })
-      .then((response) => response.text())
-      .then((data) => {
-        count = data;
-    });
-  }
+function onClick() {
+	fetch(import.meta.env.VITE_APP_API_URL, {
+		method: "POST",
+	})
+		.then((response) => response.text())
+		.then((data) => {
+			count = data;
+		});
+}
 </script>
 
 <div class="App">

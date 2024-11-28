@@ -1,18 +1,18 @@
 import { DynamoDB } from "aws-sdk";
 import { Table } from "sst/node/table";
-import Note from "./Note";
+import type Note from "./Note";
 
 const dynamoDb = new DynamoDB.DocumentClient();
 
 export default async function getNoteById(
-  noteId: string
+	noteId: string,
 ): Promise<Note | undefined> {
-  const params = {
-    Key: { id: noteId },
-    TableName: Table.Notes.tableName,
-  };
+	const params = {
+		Key: { id: noteId },
+		TableName: Table.Notes.tableName,
+	};
 
-  const { Item } = await dynamoDb.get(params).promise();
+	const { Item } = await dynamoDb.get(params).promise();
 
-  return Item as Note;
+	return Item as Note;
 }

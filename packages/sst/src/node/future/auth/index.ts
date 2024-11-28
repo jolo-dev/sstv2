@@ -1,4 +1,4 @@
-export * from './proxy.js'
+export * from "./proxy.js";
 export * from "./adapter/oidc.js";
 export * from "./adapter/google.js";
 export * from "./adapter/link.js";

@@ -1,14 +1,14 @@
-import { readFileSync, existsSync, readdirSync, statSync } from "fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "fs";
 import { join } from "path";
 import type { BuildMetaConfig, BuildMetaFileName } from "astro-sst/build-meta";
-import {
-  Plan,
-  SsrSite,
-  SsrSiteNormalizedProps,
-  SsrSiteProps,
-} from "./SsrSite.js";
 import { AllowedMethods } from "aws-cdk-lib/aws-cloudfront";
-import { Construct } from "constructs";
+import type { Construct } from "constructs";
+import {
+	type Plan,
+	SsrSite,
+	type SsrSiteNormalizedProps,
+	type SsrSiteProps,
+} from "./SsrSite.js";
 import { getStringifiedRouteTree } from "./util/astroRouteCompressor.js";
 
 const BUILD_META_FILE_NAME: BuildMetaFileName = "sst.buildMeta.json";
@@ -25,30 +25,30 @@ const BUILD_META_FILE_NAME: BuildMetaFileName = "sst.buildMeta.json";
  * ```
  */
 export class AstroSite extends SsrSite {
-  declare props: SsrSiteNormalizedProps;
+	declare props: SsrSiteNormalizedProps;
 
-  constructor(scope: Construct, id: string, props?: SsrSiteProps) {
-    super(scope, id, {
-      ...props,
-      typesPath: props?.typesPath ?? "src",
-    });
-  }
+	constructor(scope: Construct, id: string, props?: SsrSiteProps) {
+		super(scope, id, {
+			...props,
+			typesPath: props?.typesPath ?? "src",
+		});
+	}
 
-  private static getBuildMeta(filePath: string) {
-    if (!existsSync(filePath)) {
-      throw new Error(
-        `Could not find build meta file at ${filePath}. Update your 'astro-sst' package version and rebuild your Astro site.`
-      );
-    }
+	private static getBuildMeta(filePath: string) {
+		if (!existsSync(filePath)) {
+			throw new Error(
+				`Could not find build meta file at ${filePath}. Update your 'astro-sst' package version and rebuild your Astro site.`,
+			);
+		}
 
-    return JSON.parse(readFileSync(filePath, "utf-8")) as BuildMetaConfig;
-  }
+		return JSON.parse(readFileSync(filePath, "utf-8")) as BuildMetaConfig;
+	}
 
-  private static getCFRoutingFunction({
-    routes,
-    pageResolution,
-  }: BuildMetaConfig) {
-    return `
+	private static getCFRoutingFunction({
+		routes,
+		pageResolution,
+	}: BuildMetaConfig) {
+		return `
   var routeData = ${getStringifiedRouteTree(routes)};
   var findFirstMatch = (matches) => Array.isArray(matches[0]) ? findFirstMatch(matches[0]) : matches;
   var findMatches = (path, routeData) => routeData.map((route) => route[0].test(path) ? Array.isArray(route[1]) ? findMatches(path, route[1]) : route : null).filter(route => route !== null && route.length > 0);
@@ -56,10 +56,10 @@ export class AstroSite extends SsrSite {
   if (matchedRoute[0]) {
     if (!matchedRoute[1] && !/^.*\\.[^\\/]+$/.test(request.uri)) {
       ${
-        pageResolution === "file"
-          ? `request.uri = request.uri === "/" ? "/index.html" : request.uri.replace(/\\/?$/, ".html");`
-          : `request.uri = request.uri.replace(/\\/?$/, "/index.html");`
-      }
+				pageResolution === "file"
+					? `request.uri = request.uri === "/" ? "/index.html" : request.uri.replace(/\\/?$/, ".html");`
+					: `request.uri = request.uri.replace(/\\/?$/, "/index.html");`
+			}
     } else if (matchedRoute[1] === 2) {
       var redirectPath = matchedRoute[2];
       matchedRoute[0].exec(request.uri).forEach((match, index) => {
@@ -71,183 +71,183 @@ export class AstroSite extends SsrSite {
       };
     }
   }`;
-  }
+	}
 
-  protected plan() {
-    const { path: sitePath } = this.props;
+	protected plan() {
+		const { path: sitePath } = this.props;
 
-    const buildMeta = AstroSite.getBuildMeta(
-      join(sitePath, "dist", BUILD_META_FILE_NAME)
-    );
+		const buildMeta = AstroSite.getBuildMeta(
+			join(sitePath, "dist", BUILD_META_FILE_NAME),
+		);
 
-    const isStatic = buildMeta.outputMode === "static";
-    const edge = buildMeta.deploymentStrategy === "edge";
+		const isStatic = buildMeta.outputMode === "static";
+		const edge = buildMeta.deploymentStrategy === "edge";
 
-    const serverConfig = {
-      description: "Server handler for Astro",
-      handler: join(sitePath, "dist", "server", "entry.handler"),
-    };
+		const serverConfig = {
+			description: "Server handler for Astro",
+			handler: join(sitePath, "dist", "server", "entry.handler"),
+		};
 
-    const plan: Plan = {
-      edge,
-      cloudFrontFunctions: {
-        serverCfFunction: {
-          constructId: "CloudFrontFunction",
-          injections: [
-            this.useCloudFrontFunctionHostHeaderInjection(),
-            AstroSite.getCFRoutingFunction(buildMeta),
-          ],
-        },
-        serverCfFunctionHostOnly: {
-          constructId: "CloudFrontFunctionHostOnly",
-          injections: [this.useCloudFrontFunctionHostHeaderInjection()],
-        },
-      },
-      origins: {
-        staticsServer: {
-          type: "s3" as const,
-          copy: [
-            {
-              from: buildMeta.clientBuildOutputDir,
-              to: "",
-              cached: true,
-              versionedSubDir: buildMeta.clientBuildVersionedSubDir,
-            },
-          ],
-        },
-      },
-      behaviors: [],
-      errorResponses: [],
-    };
+		const plan: Plan = {
+			edge,
+			cloudFrontFunctions: {
+				serverCfFunction: {
+					constructId: "CloudFrontFunction",
+					injections: [
+						this.useCloudFrontFunctionHostHeaderInjection(),
+						AstroSite.getCFRoutingFunction(buildMeta),
+					],
+				},
+				serverCfFunctionHostOnly: {
+					constructId: "CloudFrontFunctionHostOnly",
+					injections: [this.useCloudFrontFunctionHostHeaderInjection()],
+				},
+			},
+			origins: {
+				staticsServer: {
+					type: "s3" as const,
+					copy: [
+						{
+							from: buildMeta.clientBuildOutputDir,
+							to: "",
+							cached: true,
+							versionedSubDir: buildMeta.clientBuildVersionedSubDir,
+						},
+					],
+				},
+			},
+			behaviors: [],
+			errorResponses: [],
+		};
 
-    if (edge) {
-      plan.edgeFunctions = {
-        edgeServer: {
-          constructId: "Server",
-          function: {
-            scopeOverride: this as AstroSite,
-            ...serverConfig,
-          },
-        },
-      };
-      plan.behaviors.push(
-        {
-          cacheType: "server",
-          cfFunction: "serverCfFunction",
-          edgeFunction: "edgeServer",
-          origin: "staticsServer",
-        },
-        ...readdirSync(join(sitePath, buildMeta.clientBuildOutputDir)).map(
-          (item) =>
-            ({
-              cacheType: "static",
-              pattern: statSync(
-                join(sitePath, buildMeta.clientBuildOutputDir, item)
-              ).isDirectory()
-                ? `${item}/*`
-                : item,
-              origin: "staticsServer",
-            } as const)
-        )
-      );
-    } else {
-      if (isStatic) {
-        plan.behaviors.push({
-          cacheType: "static",
-          cfFunction: "serverCfFunction",
-          origin: "staticsServer",
-        });
-      } else {
-        plan.cloudFrontFunctions!.imageServiceCfFunction = {
-          constructId: "ImageServiceCloudFrontFunction",
-          injections: [this.useCloudFrontFunctionHostHeaderInjection()],
-        };
+		if (edge) {
+			plan.edgeFunctions = {
+				edgeServer: {
+					constructId: "Server",
+					function: {
+						scopeOverride: this as AstroSite,
+						...serverConfig,
+					},
+				},
+			};
+			plan.behaviors.push(
+				{
+					cacheType: "server",
+					cfFunction: "serverCfFunction",
+					edgeFunction: "edgeServer",
+					origin: "staticsServer",
+				},
+				...readdirSync(join(sitePath, buildMeta.clientBuildOutputDir)).map(
+					(item) =>
+						({
+							cacheType: "static",
+							pattern: statSync(
+								join(sitePath, buildMeta.clientBuildOutputDir, item),
+							).isDirectory()
+								? `${item}/*`
+								: item,
+							origin: "staticsServer",
+						}) as const,
+				),
+			);
+		} else {
+			if (isStatic) {
+				plan.behaviors.push({
+					cacheType: "static",
+					cfFunction: "serverCfFunction",
+					origin: "staticsServer",
+				});
+			} else {
+				plan.cloudFrontFunctions!.imageServiceCfFunction = {
+					constructId: "ImageServiceCloudFrontFunction",
+					injections: [this.useCloudFrontFunctionHostHeaderInjection()],
+				};
 
-        plan.origins.regionalServer = {
-          type: "function",
-          constructId: "ServerFunction",
-          function: serverConfig,
-          streaming: buildMeta.responseMode === "stream",
-        };
+				plan.origins.regionalServer = {
+					type: "function",
+					constructId: "ServerFunction",
+					function: serverConfig,
+					streaming: buildMeta.responseMode === "stream",
+				};
 
-        plan.origins.fallthroughServer = {
-          type: "group",
-          primaryOriginName: "staticsServer",
-          fallbackOriginName: "regionalServer",
-          fallbackStatusCodes: [403, 404],
-        };
+				plan.origins.fallthroughServer = {
+					type: "group",
+					primaryOriginName: "staticsServer",
+					fallbackOriginName: "regionalServer",
+					fallbackStatusCodes: [403, 404],
+				};
 
-        plan.behaviors.push(
-          {
-            cacheType: "server",
-            cfFunction: "serverCfFunction",
-            origin: "fallthroughServer",
-            allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
-          },
-          {
-            cacheType: "static",
-            pattern: `${buildMeta.clientBuildVersionedSubDir}/*`,
-            origin: "staticsServer",
-          },
-          {
-            cacheType: "server",
-            pattern: "_image",
-            cfFunction: "imageServiceCfFunction",
-            origin: "regionalServer",
-            allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
-          },
-          ...buildMeta.serverRoutes?.map(
-            (route) =>
-              ({
-                cacheType: "server",
-                cfFunction: "serverCfFunctionHostOnly",
-                pattern: route,
-                origin: "regionalServer",
-              } as const)
-          )
-        );
-      }
+				plan.behaviors.push(
+					{
+						cacheType: "server",
+						cfFunction: "serverCfFunction",
+						origin: "fallthroughServer",
+						allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+					},
+					{
+						cacheType: "static",
+						pattern: `${buildMeta.clientBuildVersionedSubDir}/*`,
+						origin: "staticsServer",
+					},
+					{
+						cacheType: "server",
+						pattern: "_image",
+						cfFunction: "imageServiceCfFunction",
+						origin: "regionalServer",
+						allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+					},
+					...buildMeta.serverRoutes?.map(
+						(route) =>
+							({
+								cacheType: "server",
+								cfFunction: "serverCfFunctionHostOnly",
+								pattern: route,
+								origin: "regionalServer",
+							}) as const,
+					),
+				);
+			}
 
-      buildMeta.routes
-        .filter(
-          ({ type, route }) => type === "page" && /^\/\d{3}\/?$/.test(route)
-        )
-        .forEach(({ route, prerender }) => {
-          switch (route) {
-            case "/404":
-            case "/404/":
-              plan.errorResponses?.push({
-                httpStatus: 404,
-                responsePagePath: prerender ? "/404.html" : "/404",
-                responseHttpStatus: 404,
-              });
-              if (isStatic) {
-                plan.errorResponses?.push({
-                  httpStatus: 403,
-                  responsePagePath: "/404.html",
-                  responseHttpStatus: 404,
-                });
-              }
-              break;
-            case "/500":
-            case "/500/":
-              plan.errorResponses?.push({
-                httpStatus: 500,
-                responsePagePath: prerender ? "/500.html" : "/500",
-                responseHttpStatus: 500,
-              });
-              break;
-          }
-        });
-    }
+			buildMeta.routes
+				.filter(
+					({ type, route }) => type === "page" && /^\/\d{3}\/?$/.test(route),
+				)
+				.forEach(({ route, prerender }) => {
+					switch (route) {
+						case "/404":
+						case "/404/":
+							plan.errorResponses?.push({
+								httpStatus: 404,
+								responsePagePath: prerender ? "/404.html" : "/404",
+								responseHttpStatus: 404,
+							});
+							if (isStatic) {
+								plan.errorResponses?.push({
+									httpStatus: 403,
+									responsePagePath: "/404.html",
+									responseHttpStatus: 404,
+								});
+							}
+							break;
+						case "/500":
+						case "/500/":
+							plan.errorResponses?.push({
+								httpStatus: 500,
+								responsePagePath: prerender ? "/500.html" : "/500",
+								responseHttpStatus: 500,
+							});
+							break;
+					}
+				});
+		}
 
-    return this.validatePlan(plan);
-  }
+		return this.validatePlan(plan);
+	}
 
-  public getConstructMetadata() {
-    return {
-      type: "AstroSite" as const,
-      ...this.getConstructMetadataBase(),
-    };
-  }
+	public getConstructMetadata() {
+		return {
+			type: "AstroSite" as const,
+			...this.getConstructMetadataBase(),
+		};
+	}
 }

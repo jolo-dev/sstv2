@@ -1,7 +1,7 @@
 import { createProxy } from "../util/index.js";
 
-export interface TopicResources {}
+export type TopicResources = {};
 
 export const Topic =
-  /* @__PURE__ */
-  createProxy<TopicResources>("Topic");
+	/* @__PURE__ */
+	createProxy<TopicResources>("Topic");

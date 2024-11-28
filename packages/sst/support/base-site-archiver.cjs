@@ -4,7 +4,7 @@
 "use strict";
 
 process.on("unhandledRejection", (err) => {
-  throw err;
+	throw err;
 });
 
 const path = require("path");
@@ -27,98 +27,98 @@ const statuses = [];
 const allFilesInPosix = [];
 
 generateZips().catch(() => {
-  process.exit(1);
+	process.exit(1);
 });
 
 function generateZips() {
-  // eslint-disable-next-line no-async-promise-executor
-  return new Promise(async (resolve, reject) => {
-    // Create the first zip file
-    await openZip();
+	// eslint-disable-next-line no-async-promise-executor
+	return new Promise(async (resolve, reject) => {
+		// Create the first zip file
+		await openZip();
 
-    // Loop through each folder need to be zipped
-    for (const { src, tar } of SITE_PATHS) {
-      const files = getFilesInPath(src);
+		// Loop through each folder need to be zipped
+		for (const { src, tar } of SITE_PATHS) {
+			const files = getFilesInPath(src);
 
-      // Append files serially to ensure file order
-      for (const file of files) {
-        const fullPath = path.join(src, file);
-        const [data, stat] = await Promise.all([
-          fs.readFile(fullPath),
-          fs.stat(fullPath),
-        ]);
+			// Append files serially to ensure file order
+			for (const file of files) {
+				const fullPath = path.join(src, file);
+				const [data, stat] = await Promise.all([
+					fs.readFile(fullPath),
+					fs.stat(fullPath),
+				]);
 
-        // Validate single file size cannot be greater than filesize limit
-        const filesize = stat.size;
-        if (filesize > FILE_SIZE_LIMIT_IN_BYTES) {
-          throw new Error(
-            `Cannot package file "${fullPath}". The file is larger than ${FILE_SIZE_LIMIT_IN_MB}MB.`
-          );
-        }
+				// Validate single file size cannot be greater than filesize limit
+				const filesize = stat.size;
+				if (filesize > FILE_SIZE_LIMIT_IN_BYTES) {
+					throw new Error(
+						`Cannot package file "${fullPath}". The file is larger than ${FILE_SIZE_LIMIT_IN_MB}MB.`,
+					);
+				}
 
-        // Create a new zip file if current filesize exceeds
-        if (totalSize + filesize > FILE_SIZE_LIMIT_IN_BYTES) {
-          await archive.finalize();
-          await openZip();
-        }
+				// Create a new zip file if current filesize exceeds
+				if (totalSize + filesize > FILE_SIZE_LIMIT_IN_BYTES) {
+					await archive.finalize();
+					await openZip();
+				}
 
-        archive.append(data, {
-          name: path.join(tar, file),
-          date: new Date("1980-01-01T00:00:00.000Z"), // reset dates to get the same hash for the same content
-          mode: stat.mode,
-        });
+				archive.append(data, {
+					name: path.join(tar, file),
+					date: new Date("1980-01-01T00:00:00.000Z"), // reset dates to get the same hash for the same content
+					mode: stat.mode,
+				});
 
-        totalSize += filesize;
-        allFilesInPosix.push(file.split(path.sep).join(path.posix.sep));
-      }
-    }
+				totalSize += filesize;
+				allFilesInPosix.push(file.split(path.sep).join(path.posix.sep));
+			}
+		}
 
-    await archive.finalize();
+		await archive.finalize();
 
-    // Create a filenames file
-    const filenamesPath = path.join(ZIP_PATH, `filenames`);
-    await fs.writeFile(filenamesPath, allFilesInPosix.join("\n"));
+		// Create a filenames file
+		const filenamesPath = path.join(ZIP_PATH, `filenames`);
+		await fs.writeFile(filenamesPath, allFilesInPosix.join("\n"));
 
-    async function openZip() {
-      const partId = statuses.length;
-      const filePath = path.join(ZIP_PATH, `part${partId}.zip`);
-      await fs.mkdir(path.dirname(filePath), {
-        recursive: true,
-      });
-      output = fsSync.createWriteStream(filePath);
-      archive = archiver("zip");
-      (totalSize = 0), "w";
-      statuses.push({
-        output,
-        archive,
-        isOutputClosed: false,
-      });
+		async function openZip() {
+			const partId = statuses.length;
+			const filePath = path.join(ZIP_PATH, `part${partId}.zip`);
+			await fs.mkdir(path.dirname(filePath), {
+				recursive: true,
+			});
+			output = fsSync.createWriteStream(filePath);
+			archive = archiver("zip");
+			(totalSize = 0), "w";
+			statuses.push({
+				output,
+				archive,
+				isOutputClosed: false,
+			});
 
-      archive.on("warning", reject);
-      archive.on("error", reject);
-      // archive has been finalized and the output file descriptor has closed, resolve promise
-      // this has to be done before calling `finalize` since the events may fire immediately after.
-      // see https://www.npmjs.com/package/archiver
-      output.once("close", () => {
-        statuses[partId].isOutputClosed = true;
-        if (statuses.every(({ isOutputClosed }) => isOutputClosed)) {
-          resolve();
-        }
-      });
-      archive.pipe(output);
-    }
+			archive.on("warning", reject);
+			archive.on("error", reject);
+			// archive has been finalized and the output file descriptor has closed, resolve promise
+			// this has to be done before calling `finalize` since the events may fire immediately after.
+			// see https://www.npmjs.com/package/archiver
+			output.once("close", () => {
+				statuses[partId].isOutputClosed = true;
+				if (statuses.every(({ isOutputClosed }) => isOutputClosed)) {
+					resolve();
+				}
+			});
+			archive.pipe(output);
+		}
 
-    function getFilesInPath(sitePath) {
-      // The below options are needed to support following symlinks when building zip files:
-      // - nodir: This will prevent symlinks themselves from being copied into the zip.
-      // - follow: This will follow symlinks and copy the files within.
-      // The output here is already sorted
-      return glob.sync("**", {
-        dot: true,
-        nodir: true,
-        follow: true,
-        cwd: sitePath,
-      });
-    }
-  });
+		function getFilesInPath(sitePath) {
+			// The below options are needed to support following symlinks when building zip files:
+			// - nodir: This will prevent symlinks themselves from being copied into the zip.
+			// - follow: This will follow symlinks and copy the files within.
+			// The output here is already sorted
+			return glob.sync("**", {
+				dot: true,
+				nodir: true,
+				follow: true,
+				cwd: sitePath,
+			});
+		}
+	});
 }
