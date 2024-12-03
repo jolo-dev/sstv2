@@ -127,6 +127,7 @@ export function cookie<T extends keyof SessionTypes>(input: {
 	redirect: string;
 	options?: Partial<SignerOptions>;
 }): APIGatewayProxyStructuredResultV2 {
+<<<<<<< HEAD
 	const token = create(input);
 	const expires = new Date(
 		Date.now() + (input.options?.expiresIn || 1000 * 60 * 60 * 24 * 7),
@@ -140,6 +141,22 @@ export function cookie<T extends keyof SessionTypes>(input: {
 			`auth-token=${token}; HttpOnly; SameSite=None; Secure; Path=/; Expires=${expires}`,
 		],
 	};
+=======
+  const token = create(input);
+  const expires = new Date(
+    // @ts-ignore error in GH action
+    Date.now() + (input.options?.expiresIn || 1000 * 60 * 60 * 24 * 7)
+  );
+  return {
+    statusCode: 302,
+    headers: {
+      location: input.redirect,
+    },
+    cookies: [
+      `auth-token=${token}; HttpOnly; SameSite=None; Secure; Path=/; Expires=${expires}`,
+    ],
+  };
+>>>>>>> 69a1f60c4c9cd0bbc9d1e7bd7d257e0e6ca09eff
 }
 
 /**

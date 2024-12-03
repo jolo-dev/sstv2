@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import type * as cxapi from "@aws-cdk/cx-api";
 import type { CloudFormation } from "aws-sdk";
 import { blue } from "colorette";
@@ -37,6 +38,93 @@ export interface DeployStackResult {
 	readonly noOp: boolean;
 	readonly outputs: { [name: string]: string };
 	readonly stackArn: string;
+=======
+import * as cxapi from "@aws-cdk/cx-api";
+import type {
+  CreateChangeSetCommandInput,
+  CreateStackCommandInput,
+  DescribeChangeSetCommandOutput,
+  ExecuteChangeSetCommandInput,
+  UpdateStackCommandInput,
+  Tag,
+} from "@aws-sdk/client-cloudformation";
+import * as uuid from "uuid";
+import type {
+  SDK,
+  SdkProvider,
+  ICloudFormationClient,
+} from "sst-aws-cdk/lib/api/aws-auth/index.js";
+import type { EnvironmentResources } from "sst-aws-cdk/lib/api/environment-resources.js";
+import { addMetadataAssetsToManifest } from "sst-aws-cdk/lib/assets.js";
+import { debug, print, warning } from "sst-aws-cdk/lib/logging.js";
+import { CfnEvaluationException } from "sst-aws-cdk/lib/api/evaluate-cloudformation-template.js";
+import {
+  HotswapMode,
+  HotswapPropertyOverrides,
+  ICON,
+} from "sst-aws-cdk/lib/api/hotswap/common.js";
+import { tryHotswapDeployment } from "sst-aws-cdk/lib/api/hotswap-deployments.js";
+import {
+  changeSetHasNoChanges,
+  CloudFormationStack,
+  TemplateParameters,
+  waitForChangeSet,
+  waitForStackDeploy,
+  waitForStackDelete,
+  ParameterValues,
+  ParameterChanges,
+  ResourcesToImport,
+} from "sst-aws-cdk/lib/api/util/cloudformation.js";
+import {
+  StackActivityMonitor,
+  type StackActivityProgress,
+} from "sst-aws-cdk/lib/api/util/cloudformation/stack-activity-monitor.js";
+import {
+  type TemplateBodyParameter,
+  makeBodyParameter,
+} from "sst-aws-cdk/lib/api/util/template-body-parameter.js";
+import { AssetManifestBuilder } from "sst-aws-cdk/lib/util/asset-manifest-builder.js";
+import { determineAllowCrossAccountAssetPublishing } from "sst-aws-cdk/lib/api/util/checks.js";
+import { publishAssets } from "sst-aws-cdk/lib/util/asset-publishing.js";
+import { StringWithoutPlaceholders } from "sst-aws-cdk/lib/api/util/placeholders.js";
+import { blue } from "colorette";
+import { callWithRetry } from "./util.js";
+
+export type DeployStackResult =
+  | SuccessfulDeployStackResult
+  | NeedRollbackFirstDeployStackResult
+  | ReplacementRequiresNoRollbackStackResult;
+
+/** Successfully deployed a stack */
+export interface SuccessfulDeployStackResult {
+  readonly type: "did-deploy-stack";
+  readonly noOp: boolean;
+  readonly outputs: { [name: string]: string };
+  readonly stackArn: string;
+>>>>>>> 69a1f60c4c9cd0bbc9d1e7bd7d257e0e6ca09eff
+}
+
+/** The stack is currently in a failpaused state, and needs to be rolled back before the deployment */
+export interface NeedRollbackFirstDeployStackResult {
+  readonly type: "failpaused-need-rollback-first";
+  readonly reason: "not-norollback" | "replacement";
+}
+
+/** The upcoming change has a replacement, which requires deploying without --no-rollback */
+export interface ReplacementRequiresNoRollbackStackResult {
+  readonly type: "replacement-requires-norollback";
+}
+
+export function assertIsSuccessfulDeployStackResult(
+  x: DeployStackResult
+): asserts x is SuccessfulDeployStackResult {
+  if (x.type !== "did-deploy-stack") {
+    throw new Error(
+      `Unexpected deployStack result. This should not happen: ${JSON.stringify(
+        x
+      )}. If you are seeing this error, please report it at https://github.com/aws/aws-cdk/issues/new/choose.`
+    );
+  }
 }
 
 export interface DeployStackOptions {
@@ -58,6 +146,7 @@ export interface DeployStackOptions {
 	 */
 	readonly resolvedEnvironment: cxapi.Environment;
 
+<<<<<<< HEAD
 	/**
 	 * The SDK to use for deploying the stack
 	 *
@@ -79,18 +168,52 @@ export interface DeployStackOptions {
 	 * - Upload large CloudFormation templates to the staging bucket.
 	 */
 	readonly sdkProvider: SdkProvider;
+=======
+  /**
+   * The SDK to use for deploying the stack
+   *
+   * Should have been initialized with the correct role with which
+   * stack operations should be performed.
+   */
+  readonly sdk: SDK;
+
+  /**
+   * SDK provider (seeded with default credentials)
+   *
+   * Will be used to:
+   * - Publish assets, either legacy assets or large CFN templates
+   *   that aren't themselves assets from a manifest. (Needs an SDK
+   *   Provider because the file publishing role is declared as part
+   *   of the asset).
+   * - Hotswap
+   */
+  readonly sdkProvider: SdkProvider;
+>>>>>>> 69a1f60c4c9cd0bbc9d1e7bd7d257e0e6ca09eff
 
 	/**
 	 * Information about the bootstrap stack found in the target environment
 	 */
 	readonly envResources: EnvironmentResources;
 
+<<<<<<< HEAD
 	/**
 	 * Role to pass to CloudFormation to execute the change set
 	 *
 	 * @default - Role specified on stack, otherwise current
 	 */
 	readonly roleArn?: string;
+=======
+  /**
+   * Role to pass to CloudFormation to execute the change set
+   *
+   * To obtain a `StringWithoutPlaceholders`, run a regular
+   * string though `TargetEnvironment.replacePlaceholders`.
+   *
+   * @default - No execution role; CloudFormation either uses the role currently associated with
+   * the stack, or otherwise uses current AWS credentials.
+   */
+  readonly roleArn?: StringWithoutPlaceholders;
+>>>>>>> 69a1f60c4c9cd0bbc9d1e7bd7d257e0e6ca09eff
 
 	/**
 	 * Notification ARNs to pass to CloudFormation to notify when the change set has completed
@@ -191,12 +314,26 @@ export interface DeployStackOptions {
 	 */
 	readonly hotswap?: HotswapMode;
 
+<<<<<<< HEAD
 	/**
 	 * The extra string to append to the User-Agent header when performing AWS SDK calls.
 	 *
 	 * @default - nothing extra is appended to the User-Agent header
 	 */
 	readonly extraUserAgent?: string;
+=======
+  /**
+   * Extra properties that configure hotswap behavior
+   */
+  readonly hotswapPropertyOverrides?: HotswapPropertyOverrides;
+
+  /**
+   * The extra string to append to the User-Agent header when performing AWS SDK calls.
+   *
+   * @default - nothing extra is appended to the User-Agent header
+   */
+  readonly extraUserAgent?: string;
+>>>>>>> 69a1f60c4c9cd0bbc9d1e7bd7d257e0e6ca09eff
 
 	/**
 	 * If set, change set of type IMPORT will be created, and resourcesToImport
@@ -258,6 +395,7 @@ export async function deployStack(
 		CloudFormationStack.lookup(cfn, deployName),
 	);
 
+<<<<<<< HEAD
 	if (cloudFormationStack.stackStatus.isCreationFailure) {
 		debug(
 			`Found existing stack ${deployName} that had previously failed creation. Deleting it before attempting to re-create it.`,
@@ -274,6 +412,24 @@ export async function deployStack(
 		// we just deleted it).
 		cloudFormationStack = CloudFormationStack.doesNotExist(cfn, deployName);
 	}
+=======
+  if (cloudFormationStack.stackStatus.isCreationFailure) {
+    debug(
+      `Found existing stack ${deployName} that had previously failed creation. Deleting it before attempting to re-create it.`
+    );
+    await cfn.deleteStack({ StackName: deployName });
+    const deletedStack = await waitForStackDelete(cfn, deployName);
+    if (deletedStack && deletedStack.stackStatus.name !== "DELETE_COMPLETE") {
+      throw new Error(
+        `Failed deleting stack ${deployName} that had previously failed creation (current state: ${deletedStack.stackStatus})`
+      );
+    }
+    // Update variable to mark that the stack does not exist anymore, but avoid
+    // doing an actual lookup in CloudFormation (which would be silly to do if
+    // we just deleted it).
+    cloudFormationStack = CloudFormationStack.doesNotExist(cfn, deployName);
+  }
+>>>>>>> 69a1f60c4c9cd0bbc9d1e7bd7d257e0e6ca09eff
 
 	// Detect "legacy" assets (which remain in the metadata) and publish them via
 	// an ad-hoc asset manifest, while passing their locations via template
@@ -298,6 +454,7 @@ export async function deployStack(
 			)
 		: templateParams.supplyAll(finalParameterValues);
 
+<<<<<<< HEAD
 	if (
 		await canSkipDeploy(
 			options,
@@ -374,6 +531,98 @@ export async function deployStack(
 			};
 		}
 	}
+=======
+  if (
+    await canSkipDeploy(
+      options,
+      cloudFormationStack,
+      stackParams.hasChanges(cloudFormationStack.parameters)
+    )
+  ) {
+    debug(`${deployName}: skipping deployment (use --force to override)`);
+    // if we can skip deployment and we are performing a hotswap, let the user know
+    // that no hotswap deployment happened
+    if (options.hotswap) {
+    }
+    return {
+      type: "did-deploy-stack",
+      noOp: true,
+      outputs: cloudFormationStack.outputs,
+      stackArn: cloudFormationStack.stackId,
+    };
+  } else {
+    debug(`${deployName}: deploying...`);
+  }
+
+  const bodyParameter = await makeBodyParameter(
+    stackArtifact,
+    options.resolvedEnvironment,
+    legacyAssets,
+    options.envResources,
+    options.overrideTemplate
+  );
+  let bootstrapStackName: string | undefined;
+  try {
+    bootstrapStackName = (await options.envResources.lookupToolkit()).stackName;
+  } catch (e) {
+    debug(`Could not determine the bootstrap stack name: ${e}`);
+  }
+  await publishAssets(
+    legacyAssets.toManifest(stackArtifact.assembly.directory),
+    options.sdkProvider,
+    stackEnv,
+    {
+      parallel: options.assetParallelism,
+      allowCrossAccount: await determineAllowCrossAccountAssetPublishing(
+        options.sdk,
+        bootstrapStackName
+      ),
+    }
+  );
+
+  const hotswapMode = options.hotswap;
+  const hotswapPropertyOverrides =
+    options.hotswapPropertyOverrides ?? new HotswapPropertyOverrides();
+  if (hotswapMode && hotswapMode !== HotswapMode.FULL_DEPLOYMENT) {
+    // attempt to short-circuit the deployment if possible
+    try {
+      const hotswapDeploymentResult = await tryHotswapDeployment(
+        options.sdkProvider,
+        stackParams.values,
+        cloudFormationStack,
+        stackArtifact,
+        hotswapMode,
+        hotswapPropertyOverrides
+      );
+      if (hotswapDeploymentResult) {
+        return hotswapDeploymentResult;
+      }
+      print(
+        "Could not perform a hotswap deployment, as the stack %s contains non-Asset changes",
+        stackArtifact.displayName
+      );
+    } catch (e) {
+      if (!(e instanceof CfnEvaluationException)) {
+        throw e;
+      }
+      print(
+        "Could not perform a hotswap deployment, because the CloudFormation template could not be resolved: %s",
+        e.message
+      );
+    }
+    if (hotswapMode === HotswapMode.FALL_BACK) {
+      print("Falling back to doing a full deployment");
+      options.sdk.appendCustomUserAgent("cdk-hotswap/fallback");
+    } else {
+      return {
+        type: "did-deploy-stack",
+        noOp: true,
+        stackArn: cloudFormationStack.stackId,
+        outputs: cloudFormationStack.outputs,
+      };
+    }
+  }
+>>>>>>> 69a1f60c4c9cd0bbc9d1e7bd7d257e0e6ca09eff
 
 	// could not short-circuit the deployment, perform a full CFN deploy instead
 	const fullDeployment = new FullCloudFormationDeployment(
@@ -386,22 +635,39 @@ export async function deployStack(
 	return fullDeployment.performDeployment();
 }
 
+<<<<<<< HEAD
 type CommonPrepareOptions = keyof CloudFormation.CreateStackInput &
 	keyof CloudFormation.UpdateStackInput &
 	keyof CloudFormation.CreateChangeSetInput;
 type CommonExecuteOptions = keyof CloudFormation.CreateStackInput &
 	keyof CloudFormation.UpdateStackInput &
 	keyof CloudFormation.ExecuteChangeSetInput;
+=======
+type CommonPrepareOptions = keyof CreateStackCommandInput &
+  keyof UpdateStackCommandInput &
+  keyof CreateChangeSetCommandInput;
+type CommonExecuteOptions = keyof CreateStackCommandInput &
+  keyof UpdateStackCommandInput &
+  keyof ExecuteChangeSetCommandInput;
+>>>>>>> 69a1f60c4c9cd0bbc9d1e7bd7d257e0e6ca09eff
 
 /**
  * This class shares state and functionality between the different full deployment modes
  */
 class FullCloudFormationDeployment {
+<<<<<<< HEAD
 	private readonly cfn: ReturnType<ISDK["cloudFormation"]>;
 	private readonly stackName: string;
 	private readonly update: boolean;
 	private readonly verb: string;
 	private readonly uuid: string;
+=======
+  private readonly cfn: ICloudFormationClient;
+  private readonly stackName: string;
+  private readonly update: boolean;
+  private readonly verb: string;
+  private readonly uuid: string;
+>>>>>>> 69a1f60c4c9cd0bbc9d1e7bd7d257e0e6ca09eff
 
 	constructor(
 		private readonly options: DeployStackOptions,
@@ -453,6 +719,7 @@ class FullCloudFormationDeployment {
 		);
 		await this.updateTerminationProtection();
 
+<<<<<<< HEAD
 		if (changeSetHasNoChanges(changeSetDescription)) {
 			debug("No changes are to be performed on %s.", this.stackName);
 			if (execute) {
@@ -464,6 +731,17 @@ class FullCloudFormationDeployment {
 					})
 					.promise();
 			}
+=======
+    if (changeSetHasNoChanges(changeSetDescription)) {
+      debug("No changes are to be performed on %s.", this.stackName);
+      if (execute) {
+        debug("Deleting empty change set %s", changeSetDescription.ChangeSetId);
+        await this.cfn.deleteChangeSet({
+          StackName: this.stackName,
+          ChangeSetName: changeSetName,
+        });
+      }
+>>>>>>> 69a1f60c4c9cd0bbc9d1e7bd7d257e0e6ca09eff
 
 			if (this.options.force) {
 				warning(
@@ -477,6 +755,7 @@ class FullCloudFormationDeployment {
 				);
 			}
 
+<<<<<<< HEAD
 			return {
 				noOp: true,
 				outputs: this.cloudFormationStack.outputs,
@@ -498,10 +777,54 @@ class FullCloudFormationDeployment {
 
 		return this.executeChangeSet(changeSetDescription);
 	}
+=======
+      return {
+        type: "did-deploy-stack",
+        noOp: true,
+        outputs: this.cloudFormationStack.outputs,
+        stackArn: changeSetDescription.StackId!,
+      };
+    }
+
+    if (!execute) {
+      print(
+        "Changeset %s created and waiting in review for manual execution (--no-execute)",
+        changeSetDescription.ChangeSetId
+      );
+      return {
+        type: "did-deploy-stack",
+        noOp: false,
+        outputs: this.cloudFormationStack.outputs,
+        stackArn: changeSetDescription.StackId!,
+      };
+    }
+
+    // If there are replacements in the changeset, check the rollback flag and stack status
+    const replacement = hasReplacement(changeSetDescription);
+    const isPausedFailState =
+      this.cloudFormationStack.stackStatus.isRollbackable;
+    const rollback = this.options.rollback ?? true;
+    if (isPausedFailState && replacement) {
+      return { type: "failpaused-need-rollback-first", reason: "replacement" };
+    }
+    if (isPausedFailState && !rollback) {
+      return {
+        type: "failpaused-need-rollback-first",
+        reason: "not-norollback",
+      };
+    }
+    if (!rollback && replacement) {
+      return { type: "replacement-requires-norollback" };
+    }
+
+    return this.executeChangeSet(changeSetDescription);
+  }
+>>>>>>> 69a1f60c4c9cd0bbc9d1e7bd7d257e0e6ca09eff
 
 	private async createChangeSet(changeSetName: string, willExecute: boolean) {
 		await this.cleanupOldChangeset(changeSetName);
 
+<<<<<<< HEAD
 		debug(
 			`Attempting to create ChangeSet with name ${changeSetName} to ${this.verb} stack ${this.stackName}`,
 		);
@@ -520,6 +843,24 @@ class FullCloudFormationDeployment {
 				...this.commonPrepareOptions(),
 			})
 			.promise();
+=======
+    debug(
+      `Attempting to create ChangeSet with name ${changeSetName} to ${this.verb} stack ${this.stackName}`
+    );
+    const changeSet = await this.cfn.createChangeSet({
+      StackName: this.stackName,
+      ChangeSetName: changeSetName,
+      ChangeSetType: this.options.resourcesToImport
+        ? "IMPORT"
+        : this.update
+        ? "UPDATE"
+        : "CREATE",
+      ResourcesToImport: this.options.resourcesToImport,
+      Description: `CDK Changeset for execution ${this.uuid}`,
+      ClientToken: `create${this.uuid}`,
+      ...this.commonPrepareOptions(),
+    });
+>>>>>>> 69a1f60c4c9cd0bbc9d1e7bd7d257e0e6ca09eff
 
 		debug(
 			"Initiated creation of changeset: %s; waiting for it to finish creating...",
@@ -531,6 +872,7 @@ class FullCloudFormationDeployment {
 		});
 	}
 
+<<<<<<< HEAD
 	private async executeChangeSet(
 		changeSet: CloudFormation.DescribeChangeSetOutput,
 	): Promise<DeployStackResult> {
@@ -548,6 +890,23 @@ class FullCloudFormationDeployment {
 				...this.commonExecuteOptions(),
 			})
 			.promise();
+=======
+  private async executeChangeSet(
+    changeSet: DescribeChangeSetCommandOutput
+  ): Promise<SuccessfulDeployStackResult> {
+    debug(
+      "Initiating execution of changeset %s on stack %s",
+      changeSet.ChangeSetId,
+      this.stackName
+    );
+
+    await this.cfn.executeChangeSet({
+      StackName: this.stackName,
+      ChangeSetName: changeSet.ChangeSetName!,
+      ClientRequestToken: `exec${this.uuid}`,
+      ...this.commonExecuteOptions(),
+    });
+>>>>>>> 69a1f60c4c9cd0bbc9d1e7bd7d257e0e6ca09eff
 
 		debug(
 			"Execution of changeset %s on stack %s has started; waiting for the update to complete...",
@@ -561,6 +920,7 @@ class FullCloudFormationDeployment {
 		return this.monitorDeployment(changeSet.CreationTime!, changeSetLength);
 	}
 
+<<<<<<< HEAD
 	private async cleanupOldChangeset(changeSetName: string) {
 		if (this.cloudFormationStack.exists) {
 			// Delete any existing change sets generated by CDK since change set names must be unique.
@@ -606,10 +966,56 @@ class FullCloudFormationDeployment {
 
 	private async directDeployment(): Promise<DeployStackResult | undefined> {
 		const startTime = new Date();
+=======
+  private async cleanupOldChangeset(changeSetName: string) {
+    if (this.cloudFormationStack.exists) {
+      // Delete any existing change sets generated by CDK since change set names must be unique.
+      // The delete request is successful as long as the stack exists (even if the change set does not exist).
+      debug(
+        `Removing existing change set with name ${changeSetName} if it exists`
+      );
+      await this.cfn.deleteChangeSet({
+        StackName: this.stackName,
+        ChangeSetName: changeSetName,
+      });
+    }
+  }
+
+  private async updateTerminationProtection() {
+    // Update termination protection only if it has changed.
+    const terminationProtection =
+      this.stackArtifact.terminationProtection ?? false;
+    if (
+      !!this.cloudFormationStack.terminationProtection !== terminationProtection
+    ) {
+      debug(
+        "Updating termination protection from %s to %s for stack %s",
+        this.cloudFormationStack.terminationProtection,
+        terminationProtection,
+        this.stackName
+      );
+      await this.cfn.updateTerminationProtection({
+        StackName: this.stackName,
+        EnableTerminationProtection: terminationProtection,
+      });
+      debug(
+        "Termination protection updated to %s for stack %s",
+        terminationProtection,
+        this.stackName
+      );
+    }
+  }
+
+  private async directDeployment(): Promise<
+    SuccessfulDeployStackResult | undefined
+  > {
+    const startTime = new Date();
+>>>>>>> 69a1f60c4c9cd0bbc9d1e7bd7d257e0e6ca09eff
 
 		if (this.update) {
 			await this.updateTerminationProtection();
 
+<<<<<<< HEAD
 			try {
 				await this.cfn
 					.updateStack({
@@ -630,6 +1036,27 @@ class FullCloudFormationDeployment {
 				}
 				throw err;
 			}
+=======
+      try {
+        await this.cfn.updateStack({
+          StackName: this.stackName,
+          ClientRequestToken: `update${this.uuid}`,
+          ...this.commonPrepareOptions(),
+          ...this.commonExecuteOptions(),
+        });
+      } catch (err: any) {
+        if (err.message === "No updates are to be performed.") {
+          debug("No updates are to be performed for stack %s", this.stackName);
+          return {
+            type: "did-deploy-stack",
+            noOp: true,
+            outputs: this.cloudFormationStack.outputs,
+            stackArn: this.cloudFormationStack.stackId,
+          };
+        }
+        throw err;
+      }
+>>>>>>> 69a1f60c4c9cd0bbc9d1e7bd7d257e0e6ca09eff
 
 			if (this.options.noMonitor) return;
 			return this.monitorDeployment(startTime, undefined);
@@ -638,6 +1065,7 @@ class FullCloudFormationDeployment {
 			const terminationProtection =
 				this.stackArtifact.terminationProtection ?? false;
 
+<<<<<<< HEAD
 			await this.cfn
 				.createStack({
 					StackName: this.stackName,
@@ -649,12 +1077,24 @@ class FullCloudFormationDeployment {
 					...this.commonExecuteOptions(),
 				})
 				.promise();
+=======
+      await this.cfn.createStack({
+        StackName: this.stackName,
+        ClientRequestToken: `create${this.uuid}`,
+        ...(terminationProtection
+          ? { EnableTerminationProtection: true }
+          : undefined),
+        ...this.commonPrepareOptions(),
+        ...this.commonExecuteOptions(),
+      });
+>>>>>>> 69a1f60c4c9cd0bbc9d1e7bd7d257e0e6ca09eff
 
 			if (this.options.noMonitor) return;
 			return this.monitorDeployment(startTime, undefined);
 		}
 	}
 
+<<<<<<< HEAD
 	private async monitorDeployment(
 		startTime: Date,
 		expectedChanges: number | undefined,
@@ -672,11 +1112,31 @@ class FullCloudFormationDeployment {
 		//         ci: this.options.ci,
 		//       }
 		//     ).start();
+=======
+  private async monitorDeployment(
+    startTime: Date,
+    expectedChanges: number | undefined
+  ): Promise<SuccessfulDeployStackResult> {
+    //    const monitor = this.options.quiet
+    //      ? undefined
+    //      : StackActivityMonitor.withDefaultPrinter(
+    //          this.cfn,
+    //          this.stackName,
+    //          this.stackArtifact,
+    //          {
+    //            resourcesTotal: expectedChanges,
+    //            progress: this.options.progress,
+    //            changeSetCreationTime: startTime,
+    //            ci: this.options.ci,
+    //          }
+    //        ).start();
+>>>>>>> 69a1f60c4c9cd0bbc9d1e7bd7d257e0e6ca09eff
 
 		let finalState = this.cloudFormationStack;
 		try {
 			const successStack = await waitForStackDeploy(this.cfn, this.stackName);
 
+<<<<<<< HEAD
 			// This shouldn't really happen, but catch it anyway. You never know.
 			if (!successStack) {
 				throw new Error(
@@ -728,6 +1188,60 @@ class FullCloudFormationDeployment {
 		Pick<CloudFormation.UpdateStackInput, CommonExecuteOptions>
 	> {
 		const shouldDisableRollback = this.options.rollback === false;
+=======
+      // This shouldn't really happen, but catch it anyway. You never know.
+      if (!successStack) {
+        throw new Error(
+          "Stack deploy failed (the stack disappeared while we were deploying it)"
+        );
+      }
+      finalState = successStack;
+    } catch (e: any) {
+      throw new Error(suffixWithErrors(e.message /*, monitor?.errors*/));
+    } finally {
+      // await monitor?.stop();
+    }
+    debug("Stack %s has completed updating", this.stackName);
+    return {
+      type: "did-deploy-stack",
+      noOp: false,
+      outputs: finalState.outputs,
+      stackArn: finalState.stackId,
+    };
+  }
+
+  /**
+   * Return the options that are shared between CreateStack, UpdateStack and CreateChangeSet
+   */
+  private commonPrepareOptions(): Partial<
+    Pick<UpdateStackCommandInput, CommonPrepareOptions>
+  > {
+    return {
+      Capabilities: [
+        "CAPABILITY_IAM",
+        "CAPABILITY_NAMED_IAM",
+        "CAPABILITY_AUTO_EXPAND",
+      ],
+      NotificationARNs: this.options.notificationArns,
+      Parameters: this.stackParams.apiParameters,
+      RoleARN: this.options.roleArn,
+      TemplateBody: this.bodyParameter.TemplateBody,
+      TemplateURL: this.bodyParameter.TemplateURL,
+      Tags: this.options.tags,
+    };
+  }
+
+  /**
+   * Return the options that are shared between UpdateStack and CreateChangeSet
+   *
+   * Be careful not to add in keys for options that aren't used, as the features may not have been
+   * deployed everywhere yet.
+   */
+  private commonExecuteOptions(): Partial<
+    Pick<UpdateStackCommandInput, CommonExecuteOptions>
+  > {
+    const shouldDisableRollback = this.options.rollback === false;
+>>>>>>> 69a1f60c4c9cd0bbc9d1e7bd7d257e0e6ca09eff
 
 		return {
 			StackName: this.stackName,
@@ -742,11 +1256,19 @@ export interface DestroyStackOptions {
 	 */
 	stack: cxapi.CloudFormationStackArtifact;
 
+<<<<<<< HEAD
 	sdk: ISDK;
 	roleArn?: string;
 	deployName?: string;
 	quiet?: boolean;
 	ci?: boolean;
+=======
+  sdk: SDK;
+  roleArn?: string;
+  deployName?: string;
+  quiet?: boolean;
+  ci?: boolean;
+>>>>>>> 69a1f60c4c9cd0bbc9d1e7bd7d257e0e6ca09eff
 }
 
 export async function destroyStack(options: DestroyStackOptions) {
@@ -761,10 +1283,11 @@ export async function destroyStack(options: DestroyStackOptions) {
   const monitor = options.quiet
     ? undefined
     : StackActivityMonitor.withDefaultPrinter(cfn, deployName, options.stack, {
-        ci: options.ci,
-      }).start();
+      ci: options.ci,
+    }).start();
   */
 
+<<<<<<< HEAD
 	try {
 		await cfn
 			.deleteStack({ StackName: deployName, RoleARN: options.roleArn })
@@ -782,6 +1305,23 @@ export async function destroyStack(options: DestroyStackOptions) {
 		throw new Error(suffixWithErrors(e.message /* , monitor?.errors */));
 	} finally {
 		/*
+=======
+  try {
+    await cfn.deleteStack({ StackName: deployName, RoleARN: options.roleArn });
+    const destroyedStack = await waitForStackDelete(cfn, deployName);
+    if (
+      destroyedStack &&
+      destroyedStack.stackStatus.name !== "DELETE_COMPLETE"
+    ) {
+      throw new Error(
+        `Failed to destroy ${deployName}: ${destroyedStack.stackStatus}`
+      );
+    }
+  } catch (e: any) {
+    throw new Error(suffixWithErrors(e.message /* , monitor?.errors */));
+  } finally {
+    /*
+>>>>>>> 69a1f60c4c9cd0bbc9d1e7bd7d257e0e6ca09eff
     if (monitor) {
       await monitor.stop();
     }
@@ -918,4 +1458,16 @@ function arrayEquals(a: any[], b: any[]): boolean {
 	return (
 		a.every((item) => b.includes(item)) && b.every((item) => a.includes(item))
 	);
+}
+
+function hasReplacement(cs: DescribeChangeSetCommandOutput) {
+  return (cs.Changes ?? []).some((c) => {
+    // @ts-ignore
+    const a = c.ResourceChange?.PolicyAction;
+    return (
+      a === "ReplaceAndDelete" ||
+      a === "ReplaceAndRetain" ||
+      a === "ReplaceAndSnapshot"
+    );
+  });
 }

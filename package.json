@@ -1,38 +1,41 @@
 {
-	"name": "sst",
-	"version": "0.0.0",
-	"license": "MIT",
-	"private": true,
-	"type": "module",
-	"workspaces": [
-		"packages/*",
-		"packages/assets/*",
-		"www"
-	],
-	"scripts": {
-		"build": "turbo run build",
-		"format": "biome check --write",
-		"version": "./.changeset/version",
-		"release": "./.changeset/release",
-		"release-snapshot": "./.changeset/snapshot",
-		"prepare": "husky install"
-	},
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/sst/v2.git"
-	},
-	"devDependencies": {
-		"@biomejs/biome": "1.9.4",
-		"@changesets/changelog-github": "^0.4.8",
-		"@changesets/cli": "^2.27.10",
-		"@tsconfig/node22": "^22.0.0",
-		"husky": "^8.0.3",
-		"typescript": "^5.7.2",
-		"vitest": "~2.1.6"
-	},
-	"lint-staged": {
-		"*.{js,ts}": [
-			"eslint --fix"
-		]
-	}
+  "name": "sst",
+  "version": "0.0.0",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "packages/assets/*",
+    "www"
+  ],
+  "scripts": {
+    "build": "turbo run build --filter=!@sst/docs --filter=!@sst/console --filter=!@sst/cli-*",
+    "prettier": "prettier --cache -w --loglevel=error .",
+    "version": "./.changeset/version",
+    "release": "./.changeset/release",
+    "release-snapshot": "./.changeset/snapshot",
+    "prepare": "husky install"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sst/v2.git"
+  },
+  "devDependencies": {
+    "@changesets/changelog-github": "^0.4.8",
+    "@changesets/cli": "^2.26.0",
+    "husky": "^8.0.3",
+    "prettier": "^2.8.4",
+    "turbo": "1.8.3",
+    "typescript": "5.2.2",
+    "vitest": "^0.33.0"
+  },
+  "lint-staged": {
+    "*.{js,ts,css,json,md}": [
+      "prettier --write"
+    ],
+    "*.{js,ts}": [
+      "eslint --fix"
+    ]
+  }
 }

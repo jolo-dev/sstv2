@@ -105,6 +105,7 @@ export async function deployMany(stacks: CloudFormationStackArtifact[]) {
 export async function deploy(
 	stack: CloudFormationStackArtifact,
 ): Promise<StackDeploymentResult> {
+<<<<<<< HEAD
 	const bus = useBus();
 	const { cdk } = useProject().config;
 	Logger.debug("Deploying stack", stack.id);
@@ -162,6 +163,65 @@ export async function deploy(
 			status: "UPDATE_FAILED",
 		};
 	}
+=======
+  const bus = useBus();
+  const { cdk } = useProject().config;
+  Logger.debug("Deploying stack", stack.id);
+  const provider = await useAWSProvider();
+  const { Deployments } = await import("../cdk/deployments.js");
+  const deployment = new Deployments({ sdkProvider: provider });
+  const stackTags = Object.entries(stack.tags ?? {}).map(([Key, Value]) => ({
+    Key,
+    Value,
+  }));
+  try {
+    await addInUseExports(stack);
+    bus.publish("stack.status", {
+      stackID: stack.stackName,
+      status: "PUBLISH_ASSETS_IN_PROGRESS",
+    });
+    const result = await deployment.deployStack({
+      stack: stack as any,
+      quiet: true,
+      tags: stackTags,
+      deploymentMethod: {
+        method: "direct",
+      },
+      toolkitStackName: cdk?.toolkitStackName,
+    });
+    if (result?.type === "did-deploy-stack" && result.noOp) {
+      bus.publish("stack.status", {
+        stackID: stack.stackName,
+        status: "SKIPPED",
+      });
+      return {
+        errors: {},
+        outputs: filterOutputs(result.outputs),
+        status: "SKIPPED",
+      };
+    }
+    bus.publish("stack.updated", {
+      stackID: stack.stackName,
+    });
+    return monitor(stack.stackName);
+  } catch (ex: any) {
+    Logger.debug("Failed to deploy stack", stack.id, ex);
+    if (ex.message === "No updates are to be performed.") {
+      return monitor(stack.stackName);
+    }
+    bus.publish("stack.status", {
+      stackID: stack.stackName,
+      status: "UPDATE_FAILED",
+    });
+    return {
+      errors: {
+        stack: ex.message,
+      },
+      outputs: {},
+      status: "UPDATE_FAILED",
+    };
+  }
+>>>>>>> 69a1f60c4c9cd0bbc9d1e7bd7d257e0e6ca09eff
 }
 
 async function addInUseExports(stack: CloudFormationStackArtifact) {

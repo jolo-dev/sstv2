@@ -60,6 +60,7 @@ import { type Size, toCdkSize } from "./util/size.js";
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 export interface SsrFunctionProps
+<<<<<<< HEAD
 	extends Omit<FunctionOptions, "memorySize" | "timeout" | "runtime"> {
 	bundle?: string;
 	handler: string;
@@ -75,6 +76,23 @@ export interface SsrFunctionProps
 	streaming?: boolean;
 	injections?: string[];
 	prefetchSecrets?: boolean;
+=======
+  extends Omit<FunctionOptions, "memorySize" | "timeout" | "runtime"> {
+  bundle?: string;
+  handler: string;
+  runtime?: "nodejs16.x" | "nodejs18.x" | "nodejs20.x" | "nodejs22.x";
+  timeout?: number | Duration;
+  memorySize?: number | Size;
+  permissions?: Permissions;
+  environment?: Record<string, string>;
+  bind?: BindingResource[];
+  nodejs?: NodeJSProps;
+  copyFiles?: FunctionCopyFilesProps[];
+  logRetention?: RetentionDays;
+  streaming?: boolean;
+  injections?: string[];
+  prefetchSecrets?: boolean;
+>>>>>>> 69a1f60c4c9cd0bbc9d1e7bd7d257e0e6ca09eff
 }
 
 /////////////////////
@@ -193,6 +211,7 @@ export class SsrFunction extends Construct implements SSTConstruct {
 			logRetention,
 		} = this.props;
 
+<<<<<<< HEAD
 		return new CdkFunction(this, `ServerFunction`, {
 			...this.props,
 			handler: handler.split(path.sep).join(path.posix.sep),
@@ -219,6 +238,36 @@ export class SsrFunction extends Construct implements SSTConstruct {
 			logRetentionRetryOptions: logRetention && { maxRetries: 100 },
 		});
 	}
+=======
+    return new CdkFunction(this, `ServerFunction`, {
+      ...this.props,
+      handler: handler.split(path.sep).join(path.posix.sep),
+      logRetention: logRetention ?? RetentionDays.THREE_DAYS,
+      code: Code.fromBucket(
+        Bucket.fromBucketName(this, "IServerFunctionBucket", assetBucket),
+        assetKey
+      ),
+      runtime:
+          runtime === "nodejs22.x"
+          ? Runtime.NODEJS_22_X
+          : runtime === "nodejs20.x"
+          ? Runtime.NODEJS_20_X
+          : runtime === "nodejs16.x"
+          ? Runtime.NODEJS_16_X
+          : Runtime.NODEJS_18_X,
+      architecture,
+      memorySize:
+        typeof memorySize === "string"
+          ? toCdkSize(memorySize).toMebibytes()
+          : memorySize,
+      timeout:
+        typeof timeout === "string"
+          ? toCdkDuration(timeout)
+          : CdkDuration.seconds(timeout),
+      logRetentionRetryOptions: logRetention && { maxRetries: 100 },
+    });
+  }
+>>>>>>> 69a1f60c4c9cd0bbc9d1e7bd7d257e0e6ca09eff
 
 	private createCodeReplacer(assetBucket: string, assetKey: string) {
 		const { environment } = this.props;

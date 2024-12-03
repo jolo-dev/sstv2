@@ -4,6 +4,11 @@ import { StandardRetryStrategy } from "@aws-sdk/middleware-retry";
 import { SdkProvider } from "sst-aws-cdk/lib/api/aws-auth/sdk-provider.js";
 import { Logger } from "./logger.js";
 export type {} from "@smithy/types";
+// @ts-expect-error
+import stupid from "aws-sdk/lib/maintenance_mode_message.js";
+stupid.suppress = true;
+import { useProject } from "./project.js";
+import { lazy } from "./util/lazy.js";
 
 export const useAWSCredentialsProvider = lazy(() => {
 	const project = useProject();
@@ -134,18 +139,8 @@ export function useAWSClient<C>(client: new (config: any) => C, force = false) {
 	return result;
 }
 
-// @ts-expect-error
-import stupid from "aws-sdk/lib/maintenance_mode_message.js";
-stupid.suppress = true;
-import aws from "aws-sdk";
-import { useProject } from "./project.js";
-import { lazy } from "./util/lazy.js";
-const CredentialProviderChain = aws.CredentialProviderChain;
-
-/**
- * Do not use this. It is only used for AWS CDK compatibility.
- */
 export const useAWSProvider = lazy(async () => {
+<<<<<<< HEAD
 	Logger.debug("Loading v2 AWS SDK");
 	const project = useProject();
 	const creds = await useAWSCredentials();
@@ -176,4 +171,8 @@ export const useAWSProvider = lazy(async () => {
 	});
 
 	return provider;
+=======
+  const project = useProject();
+  return new SdkProvider(useAWSCredentialsProvider(), project.config.region!);
+>>>>>>> 69a1f60c4c9cd0bbc9d1e7bd7d257e0e6ca09eff
 });

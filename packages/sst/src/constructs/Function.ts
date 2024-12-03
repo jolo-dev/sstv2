@@ -74,6 +74,7 @@ import { useWarning } from "./util/warning.js";
 const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
 const supportedRuntimes = {
+<<<<<<< HEAD
 	container: CDKRuntime.FROM_IMAGE,
 	rust: CDKRuntime.PROVIDED_AL2023,
 	"nodejs16.x": CDKRuntime.NODEJS_16_X,
@@ -94,6 +95,29 @@ const supportedRuntimes = {
 	java21: CDKRuntime.JAVA_21,
 	"go1.x": CDKRuntime.PROVIDED_AL2023,
 	go: CDKRuntime.PROVIDED_AL2023,
+=======
+  container: CDKRuntime.FROM_IMAGE,
+  rust: CDKRuntime.PROVIDED_AL2023,
+  "nodejs16.x": CDKRuntime.NODEJS_16_X,
+  "nodejs18.x": CDKRuntime.NODEJS_18_X,
+  "nodejs20.x": CDKRuntime.NODEJS_20_X,
+  "nodejs22.x": CDKRuntime.NODEJS_22_X,
+  "python3.7": CDKRuntime.PYTHON_3_7,
+  "python3.8": CDKRuntime.PYTHON_3_8,
+  "python3.9": CDKRuntime.PYTHON_3_9,
+  "python3.10": CDKRuntime.PYTHON_3_10,
+  "python3.11": CDKRuntime.PYTHON_3_11,
+  "python3.12": CDKRuntime.PYTHON_3_12,
+  "dotnetcore3.1": CDKRuntime.DOTNET_CORE_3_1,
+  dotnet6: CDKRuntime.DOTNET_6,
+  dotnet8: CDKRuntime.DOTNET_8,
+  java8: CDKRuntime.JAVA_8,
+  java11: CDKRuntime.JAVA_11,
+  java17: CDKRuntime.JAVA_17,
+  java21: CDKRuntime.JAVA_21,
+  "go1.x": CDKRuntime.PROVIDED_AL2023,
+  go: CDKRuntime.PROVIDED_AL2023,
+>>>>>>> 69a1f60c4c9cd0bbc9d1e7bd7d257e0e6ca09eff
 };
 
 export type Runtime = keyof typeof supportedRuntimes;
@@ -136,6 +160,7 @@ export interface FunctionHooks {
 }
 
 export interface FunctionProps
+<<<<<<< HEAD
 	extends Omit<
 		FunctionOptions,
 		| "functionName"
@@ -158,6 +183,31 @@ export interface FunctionProps
 	 *```
 	 */
 	copyFiles?: FunctionCopyFilesProps[];
+=======
+  extends Omit<
+    FunctionOptions,
+    | "functionName"
+    | "memorySize"
+    | "timeout"
+    | "runtime"
+    | "tracing"
+    | "layers"
+    | "architecture"
+    | "logRetention"
+    | "ephemeralStorageSize"
+  > {
+  /**
+   * Used to configure additional files to copy into the function bundle
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   copyFiles: [{ from: "src/index.js" }]
+   * })
+   *```
+   */
+  copyFiles?: FunctionCopyFilesProps[];
+>>>>>>> 69a1f60c4c9cd0bbc9d1e7bd7d257e0e6ca09eff
 
 	/**
 	 * Used to configure go function properties

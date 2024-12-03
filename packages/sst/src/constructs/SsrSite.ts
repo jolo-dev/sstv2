@@ -146,6 +146,7 @@ export interface SsrSiteFileOptions extends BaseSiteFileOptions {}
 export interface SsrSiteReplaceProps extends BaseSiteReplaceProps {}
 export interface SsrCdkDistributionProps extends BaseSiteCdkDistributionProps {}
 export interface SsrSiteProps {
+<<<<<<< HEAD
 	/**
 	 * Bind resources for the function
 	 *
@@ -492,6 +493,354 @@ export interface SsrSiteProps {
 		 */
 		transform?: (args: Plan) => void;
 	};
+=======
+  /**
+   * Bind resources for the function
+   *
+   * @example
+   * ```js
+   * new Function(stack, "Function", {
+   *   handler: "src/function.handler",
+   *   bind: [STRIPE_KEY, bucket],
+   * })
+   * ```
+   */
+  bind?: BindingResource[];
+  /**
+   * Path to the directory where the app is located.
+   * @default "."
+   */
+  path?: string;
+  /**
+   * Path relative to the app location where the type definitions are located.
+   * @default "."
+   */
+  typesPath?: string;
+  /**
+   * The command for building the website
+   * @default `npm run build`
+   * @example
+   * ```js
+   * buildCommand: "yarn build",
+   * ```
+   */
+  buildCommand?: string;
+  /**
+   * The customDomain for this website. SST supports domains that are hosted
+   * either on [Route 53](https://aws.amazon.com/route53/) or externally.
+   *
+   * Note that you can also migrate externally hosted domains to Route 53 by
+   * [following this guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/MigratingDNS.html).
+   *
+   * @example
+   * ```js
+   * customDomain: "domain.com",
+   * ```
+   *
+   * ```js
+   * customDomain: {
+   *   domainName: "domain.com",
+   *   domainAlias: "www.domain.com",
+   *   hostedZone: "domain.com"
+   * },
+   * ```
+   */
+  customDomain?: string | SsrDomainProps;
+  /**
+   * The execution timeout in seconds for SSR function.
+   * @default 10 seconds
+   * @example
+   * ```js
+   * timeout: "5 seconds",
+   * ```
+   */
+  timeout?: number | Duration;
+  /**
+   * The amount of memory in MB allocated for SSR function.
+   * @default 1024 MB
+   * @example
+   * ```js
+   * memorySize: "512 MB",
+   * ```
+   */
+  memorySize?: number | Size;
+  /**
+   * The runtime environment for the SSR function.
+   * @default nodejs18.x
+   * @example
+   * ```js
+   * runtime: "nodejs20.x",
+   * ```
+   */
+  runtime?: "nodejs16.x" | "nodejs18.x" | "nodejs20.x" | "nodejs22.x";
+  /**
+   * Used to configure nodejs function properties
+   */
+  nodejs?: SsrSiteNodeJSProps;
+  /**
+   * Attaches the given list of permissions to the SSR function. Configuring this property is equivalent to calling `attachPermissions()` after the site is created.
+   * @example
+   * ```js
+   * permissions: ["ses"]
+   * ```
+   */
+  permissions?: Permissions;
+  /**
+   * An object with the key being the environment variable name.
+   *
+   * @example
+   * ```js
+   * environment: {
+   *   API_URL: api.url,
+   *   USER_POOL_CLIENT: auth.cognitoUserPoolClient.userPoolClientId,
+   * },
+   * ```
+   */
+  environment?: Record<string, string>;
+  /**
+   * The number of server functions to keep warm. This option is only supported for the regional mode.
+   * @default Server function is not kept warm
+   */
+  warm?: number;
+  regional?: {
+    /**
+     * Secure the server function URL using AWS IAM authentication. By default, the server function URL is publicly accessible. When this flag is enabled, the server function URL will require IAM authorization, and a Lambda@Edge function will sign the requests. Be aware that this introduces added latency to the requests.
+     * @default false
+     */
+    enableServerUrlIamAuth?: boolean;
+    /**
+     * Prefetches bound secret values and injects them into the function's environment variables.
+     * @default false
+     */
+    prefetchSecrets?: boolean;
+  };
+  dev?: {
+    /**
+     * When running `sst dev`, site is not deployed. This is to ensure `sst dev` can start up quickly.
+     * @default false
+     * @example
+     * ```js
+     * dev: {
+     *   deploy: true
+     * }
+     * ```
+     */
+    deploy?: boolean;
+    /**
+     * The local site URL when running `sst dev`.
+     * @example
+     * ```js
+     * dev: {
+     *   url: "http://localhost:3000"
+     * }
+     * ```
+     */
+    url?: string;
+  };
+  assets?: {
+    /**
+     * Character encoding for text based assets uploaded to S3 (ex: html, css, js, etc.). If "none" is specified, no charset will be returned in header.
+     * @default utf-8
+     * @example
+     * ```js
+     * assets: {
+     *   textEncoding: "iso-8859-1"
+     * }
+     * ```
+     */
+    textEncoding?: "utf-8" | "iso-8859-1" | "windows-1252" | "ascii" | "none";
+    /**
+     * The TTL for versioned files (ex: `main-1234.css`) in the CDN and browser cache. Ignored when `versionedFilesCacheHeader` is specified.
+     * @default 1 year
+     * @example
+     * ```js
+     * assets: {
+     *   versionedFilesTTL: "30 days"
+     * }
+     * ```
+     */
+    versionedFilesTTL?: number | Duration;
+    /**
+     * The header to use for versioned files (ex: `main-1234.css`) in the CDN cache. When specified, the `versionedFilesTTL` option is ignored.
+     * @default public,max-age=31536000,immutable
+     * @example
+     * ```js
+     * assets: {
+     *   versionedFilesCacheHeader: "public,max-age=31536000,immutable"
+     * }
+     * ```
+     */
+    versionedFilesCacheHeader?: string;
+    /**
+     * The TTL for non-versioned files (ex: `index.html`) in the CDN cache. Ignored when `nonVersionedFilesCacheHeader` is specified.
+     * @default 1 day
+     * @example
+     * ```js
+     * assets: {
+     *   nonVersionedFilesTTL: "4 hours"
+     * }
+     * ```
+     */
+    nonVersionedFilesTTL?: number | Duration;
+    /**
+     * The header to use for non-versioned files (ex: `index.html`) in the CDN cache. When specified, the `nonVersionedFilesTTL` option is ignored.
+     * @default public,max-age=0,s-maxage=86400,stale-while-revalidate=8640
+     * @example
+     * ```js
+     * assets: {
+     *   nonVersionedFilesCacheHeader: "public,max-age=0,no-cache"
+     * }
+     * ```
+     */
+    nonVersionedFilesCacheHeader?: string;
+    /**
+     * List of file options to specify cache control and content type for cached files. These file options are appended to the default file options so it's possible to override the default file options by specifying an overlapping file pattern.
+     * @example
+     * ```js
+     * assets: {
+     *   fileOptions: [
+     *     {
+     *       files: "**\/*.zip",
+     *       cacheControl: "private,no-cache,no-store,must-revalidate",
+     *       contentType: "application/zip",
+     *     },
+     *   ],
+     * }
+     * ```
+     */
+    fileOptions?: SsrSiteFileOptions[];
+    /**
+     * @internal
+     */
+    _uploadConcurrency?: number;
+  };
+  invalidation?: {
+    /**
+     * While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
+     * @default false
+     * @example
+     * ```js
+     * invalidation: {
+     *   wait: true,
+     * }
+     * ```
+     */
+    wait?: boolean;
+    /**
+     * The paths to invalidate. There are three built-in options:
+     * - "none" - No invalidation will be performed.
+     * - "all" - All files will be invalidated when any file changes.
+     * - "versioned" - Only versioned files will be invalidated when versioned files change.
+     * Alternatively you can pass in an array of paths to invalidate.
+     * @default "all"
+     * @example
+     * Disable invalidation:
+     * ```js
+     * invalidation: {
+     *   paths: "none",
+     * }
+     * ```
+     * Invalidate "index.html" and all files under the "products" route:
+     * ```js
+     * invalidation: {
+     *   paths: ["/index.html", "/products/*"],
+     * }
+     * ```
+     */
+    paths?: "none" | "all" | "versioned" | string[];
+  };
+  /**
+   * While deploying, SST waits for the CloudFront cache invalidation process to finish. This ensures that the new content will be served once the deploy command finishes. However, this process can sometimes take more than 5 mins. For non-prod environments it might make sense to pass in `false`. That'll skip waiting for the cache to invalidate and speed up the deploy process.
+   * @default false
+   * @deprecated Use `invalidation.wait` instead.
+   */
+  waitForInvalidation?: boolean;
+  cdk?: {
+    /**
+     * Allows you to override default id for this construct.
+     */
+    id?: string;
+    /**
+     * Allows you to override default settings this construct uses internally to create the bucket
+     */
+    bucket?: BucketProps | IBucket;
+    /**
+     * Pass in a value to override the default settings this construct uses to
+     * create the CDK `Distribution` internally.
+     */
+    distribution?: SsrCdkDistributionProps;
+    /**
+     * Override the CloudFront S3 origin properties.
+     * @example
+     * ```js
+     * import { OriginAccessIdenty } from "aws-cdk-lib/aws-cloudfront";
+     *
+     * cdk: {
+     *   s3Origin: {
+     *     originAccessIdentity: OriginAccessIdentity.fromOriginAccessIdentityId(stack, "OriginAccessIdentity", "XXXXXXXX" ),
+     *   },
+     * }
+     * ```
+     */
+    s3Origin?: S3OriginProps;
+    /**
+     * Override the CloudFront cache policy properties for responses from the
+     * server rendering Lambda.
+     *
+     * @default
+     * By default, the cache policy is configured to cache all responses from
+     * the server rendering Lambda based on the query-key only. If you're using
+     * cookie or header based authentication, you'll need to override the
+     * cache policy to cache based on those values as well.
+     *
+     * ```js
+     * serverCachePolicy: new CachePolicy(this, "ServerCache", {
+     *   queryStringBehavior: CacheQueryStringBehavior.all(),
+     *   headerBehavior: CacheHeaderBehavior.none(),
+     *   cookieBehavior: CacheCookieBehavior.none(),
+     *   defaultTtl: Duration.days(0),
+     *   maxTtl: Duration.days(365),
+     *   minTtl: Duration.days(0),
+     * })
+     * ```
+     */
+    serverCachePolicy?: ICachePolicy;
+    /**
+     * Override the CloudFront response headers policy properties for responses
+     * from the server rendering Lambda.
+     */
+    responseHeadersPolicy?: IResponseHeadersPolicy;
+    /**
+     * Override the CloudFront viewer protocol policy properties.
+     * @default ViewerProtocolPolicy.REDIRECT_TO_HTTPS
+     * @example
+     * ```js
+     * import { ViewerProtocolPolicy } from "aws-cdk-lib/aws-cloudfront";
+     *
+     * cdk: {
+     *   viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+     * }
+     * ```
+     */
+    viewerProtocolPolicy?: ViewerProtocolPolicy;
+    server?: Pick<
+      CdkFunctionProps,
+      | "layers"
+      | "vpc"
+      | "vpcSubnets"
+      | "securityGroups"
+      | "allowAllOutbound"
+      | "allowPublicSubnet"
+      | "architecture"
+      | "logRetention"
+    > &
+      Pick<FunctionProps, "copyFiles">;
+    /**
+     * @hidden Need to fix tsdoc generation to support the `Plan` type
+     */
+    transform?: (args: Plan) => void;
+  };
+>>>>>>> 69a1f60c4c9cd0bbc9d1e7bd7d257e0e6ca09eff
 }
 
 type SsrSiteInvalidationNormalizedProps = Exclude<

@@ -134,6 +134,7 @@ export interface JobContainerProps {
 }
 
 export interface JobProps {
+<<<<<<< HEAD
 	/**
 	 * The CPU architecture of the job.
 	 * @default "x86_64"
@@ -350,6 +351,224 @@ export interface JobProps {
 		 */
 		securityGroups?: ISecurityGroup[];
 	};
+=======
+  /**
+   * The CPU architecture of the job.
+   * @default "x86_64"
+   * @example
+   * ```js
+   * new Job(stack, "MyJob", {
+   *   architecture: "arm_64",
+   *   handler: "src/job.handler",
+   * })
+   * ```
+   */
+  architecture?: "x86_64" | "arm_64";
+  /**
+   * The runtime environment for the job.
+   * @default "nodejs18.x"
+   * @example
+   * ```js
+   * new Job(stack, "MyJob", {
+   *   runtime: "container",
+   *   handler: "src/job",
+   * })
+   *```
+   */
+  runtime?: "nodejs" | "nodejs16.x" | "nodejs18.x" | "nodejs20.x" | "nodejs22.x" | "container";
+  /**
+   * For "nodejs" runtime, point to the entry point and handler function.
+   * Of the format: `/path/to/file.function`.
+   *
+   * @example
+   * ```js
+   * new Job(stack, "MyJob", {
+   *   handler: "src/job.handler",
+   * })
+   *```
+   *
+   * For "container" runtime, point the handler to the directory containing
+   * the Dockerfile.
+   *
+   * @example
+   * ```js
+   * new Job(stack, "MyJob", {
+   *   runtime: "container",
+   *   handler: "src/job", // Dockerfile is at "src/job/Dockerfile"
+   * })
+   *```
+   */
+  handler: string;
+  /**
+   * The amount of memory in MB allocated.
+   *
+   * @default "3 GB"
+   *
+   * @example
+   * ```js
+   * new Job(stack, "MyJob", {
+   *   handler: "src/job.handler",
+   *   memorySize: "3 GB",
+   * })
+   *```
+   */
+  memorySize?: JobMemorySize;
+  /**
+   * The execution timeout. Minimum 5 minutes. Maximum 36 hours.
+   *
+   * @default "8 hours"
+   *
+   * @example
+   * ```js
+   * new Job(stack, "MyJob", {
+   *   handler: "src/job.handler",
+   *   timeout: "30 minutes",
+   * })
+   *```
+   */
+  timeout?: Duration;
+  /**
+   * Used to configure additional files to copy into the function bundle
+   *
+   * @example
+   * ```js
+   * new Job(stack, "job", {
+   *   copyFiles: [{ from: "src/index.js" }]
+   * })
+   *```
+   */
+  copyFiles?: FunctionCopyFilesProps[];
+  /**
+   * Used to configure nodejs function properties
+   */
+  nodejs?: JobNodeJSProps;
+  /**
+   * Used to configure container properties
+   */
+  container?: JobContainerProps;
+  /**
+   * Can be used to disable Live Lambda Development when using `sst start`. Useful for things like Custom Resources that need to execute during deployment.
+   *
+   * @default true
+   *
+   * @example
+   * ```js
+   * new Job(stack, "MyJob", {
+   *   handler: "src/job.handler",
+   *   enableLiveDev: false
+   * })
+   *```
+   */
+  enableLiveDev?: boolean;
+  /**
+   * Configure environment variables for the job
+   *
+   * @example
+   * ```js
+   * new Job(stack, "MyJob", {
+   *   handler: "src/job.handler",
+   *   environment: {
+   *     DEBUG: "*",
+   *   }
+   * })
+   * ```
+   */
+  environment?: Record<string, string>;
+  /**
+   * Bind resources for the job
+   *
+   * @example
+   * ```js
+   * new Job(stack, "MyJob", {
+   *   handler: "src/job.handler",
+   *   bind: [STRIPE_KEY, bucket],
+   * })
+   * ```
+   */
+  bind?: BindingResource[];
+  /**
+   * Attaches the given list of permissions to the job. Configuring this property is equivalent to calling `attachPermissions()` after the job is created.
+   *
+   * @example
+   * ```js
+   * new Job(stack, "MyJob", {
+   *   handler: "src/job.handler",
+   *   permissions: ["ses"]
+   * })
+   * ```
+   */
+  permissions?: Permissions;
+  /**
+   * The duration logs are kept in CloudWatch Logs.
+   * @default Logs retained indefinitely
+   * @example
+   * ```js
+   * new Job(stack, "MyJob", {
+   *   handler: "src/job.handler",
+   *   logRetention: "one_week"
+   * })
+   * ```
+   */
+  logRetention?: Lowercase<keyof typeof RetentionDays>;
+  cdk?: {
+    /**
+     * Allows you to override default id for this construct.
+     */
+    id?: string;
+    /**
+     * Runs codebuild job in the specified VPC. Note this will only work once deployed.
+     *
+     * @example
+     * ```js
+     * new Job(stack, "MyJob", {
+     *   handler: "src/job.handler",
+     *   cdk: {
+     *     vpc: Vpc.fromLookup(stack, "VPC", {
+     *       vpcId: "vpc-xxxxxxxxxx",
+     *     }),
+     *   }
+     * })
+     * ```
+     */
+    vpc?: IVpc;
+    /**
+     * Where to place the network interfaces within the VPC.
+     * @default All private subnets.
+     * @example
+     * ```js
+     * import { SubnetType } from "aws-cdk-lib/aws-ec2";
+     *
+     * new Job(stack, "MyJob", {
+     *   handler: "src/job.handler",
+     *   cdk: {
+     *     vpc,
+     *     vpcSubnets: { subnetType: SubnetType.PRIVATE_WITH_EGRESS }
+     *   }
+     * })
+     * ```
+     */
+    vpcSubnets?: SubnetSelection;
+    /**
+     * The list of security groups to associate with the Job's network interfaces.
+     * @default A new security group is created.
+     * @example
+     * ```js
+     * import { SecurityGroup } from "aws-cdk-lib/aws-ec2";
+     *
+     * new Job(stack, "MyJob", {
+     *   handler: "src/job.handler",
+     *   cdk: {
+     *     vpc,
+     *     securityGroups: [
+     *       new SecurityGroup(stack, "MyJobSG", { vpc })
+     *     ]
+     *   }
+     * })
+     * ```
+     */
+    securityGroups?: ISecurityGroup[];
+  };
+>>>>>>> 69a1f60c4c9cd0bbc9d1e7bd7d257e0e6ca09eff
 }
 
 /////////////////////
@@ -641,6 +860,7 @@ export class Job extends Construct implements SSTConstruct {
 				].join("\n"),
 			);
 
+<<<<<<< HEAD
 			// Update job's commands
 			const code = AssetCode.fromAsset(result.out);
 			const codeConfig = code.bind(this);
@@ -680,6 +900,49 @@ export class Job extends Construct implements SSTConstruct {
 					`      - node handler-wrapper.mjs`,
 				].join("\n"),
 			};
+=======
+      // Update job's commands
+      const code = AssetCode.fromAsset(result.out);
+      const codeConfig = code.bind(this);
+      const project = this.job.node.defaultChild as CfnProject;
+      const dockerImageMap = {
+        arm_64: {
+          nodejs: "amazon/aws-lambda-nodejs:16.2023.07.13.14",
+          "nodejs16.x": "amazon/aws-lambda-nodejs:16.2023.07.13.14",
+          "nodejs18.x": "amazon/aws-lambda-nodejs:18.2023.12.14.13",
+          "nodejs20.x": "amazon/aws-lambda-nodejs:20.2023.12.14.13",
+          "nodejs22.x": "amazon/aws-lambda-nodejs:22.2024.11.22.14",
+        },
+        x86_64: {
+          nodejs: "amazon/aws-lambda-nodejs:16",
+          "nodejs16.x": "amazon/aws-lambda-nodejs:16",
+          "nodejs18.x": "amazon/aws-lambda-nodejs:18",
+          "nodejs20.x": "amazon/aws-lambda-nodejs:20",
+          "nodejs22.x": "amazon/aws-lambda-nodejs:22",
+        },
+      };
+      const image = LinuxBuildImage.fromDockerRegistry(
+        // ARM images can be found here https://hub.docker.com/r/amazon/aws-lambda-nodejs
+        dockerImageMap[architecture ?? "x86_64"][runtime ?? "nodejs18.x"]
+      );
+      project.environment = {
+        ...project.environment,
+        type: architecture === "arm_64" ? "ARM_CONTAINER" : "LINUX_CONTAINER",
+        image: image.imageId,
+      };
+      image.repository?.grantPull(this.job.role!);
+      project.source = {
+        type: "S3",
+        location: `${codeConfig.s3Location?.bucketName}/${codeConfig.s3Location?.objectKey}`,
+        buildSpec: [
+          "version: 0.2",
+          "phases:",
+          "  build:",
+          "    commands:",
+          `      - node handler-wrapper.mjs`,
+        ].join("\n"),
+      };
+>>>>>>> 69a1f60c4c9cd0bbc9d1e7bd7d257e0e6ca09eff
 
 			this.attachPermissions([
 				new PolicyStatement({

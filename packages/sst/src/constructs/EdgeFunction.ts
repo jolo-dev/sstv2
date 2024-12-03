@@ -59,6 +59,7 @@ import { type Size, toCdkSize } from "./util/size.js";
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 
 export interface EdgeFunctionProps {
+<<<<<<< HEAD
 	bundle?: string;
 	handler: string;
 	runtime?: "nodejs16.x" | "nodejs18.x" | "nodejs20.x";
@@ -70,6 +71,19 @@ export interface EdgeFunctionProps {
 	nodejs?: NodeJSProps;
 	copyFiles?: FunctionCopyFilesProps[];
 	scopeOverride?: IConstruct;
+=======
+  bundle?: string;
+  handler: string;
+  runtime?: "nodejs16.x" | "nodejs18.x" | "nodejs20.x" | "nodejs22.x";
+  timeout?: number | Duration;
+  memorySize?: number | Size;
+  permissions?: Permissions;
+  environment?: Record<string, string>;
+  bind?: BindingResource[];
+  nodejs?: NodeJSProps;
+  copyFiles?: FunctionCopyFilesProps[];
+  scopeOverride?: IConstruct;
+>>>>>>> 69a1f60c4c9cd0bbc9d1e7bd7d257e0e6ca09eff
 }
 
 /////////////////////
@@ -511,6 +525,7 @@ export class EdgeFunction extends Construct {
 			}
 		}
 
+<<<<<<< HEAD
 		// Create custom resource
 		const fn = new CustomResource(this.scope, resId, {
 			serviceToken: provider.functionArn,
@@ -545,6 +560,44 @@ export class EdgeFunction extends Construct {
 		});
 		return { fn, fnArn: fn.getAttString("FunctionArn") };
 	}
+=======
+    // Create custom resource
+    const fn = new CustomResource(this.scope, resId, {
+      serviceToken: provider.functionArn,
+      resourceType: "Custom::SSTEdgeLambda",
+      properties: {
+        FunctionNamePrefix: `${Stack.of(this).stackName}-${resId}`,
+        FunctionBucket: lambdaBucket.getAttString("BucketName"),
+        FunctionParams: {
+          Description: `${this.node.id} handler`,
+          Handler: path.posix.join(...handler.split(path.sep)),
+          Code: {
+            S3Bucket: assetBucket,
+            S3Key: assetKey,
+          },
+          Runtime:
+            runtime === "nodejs22.x"
+              ? Runtime.NODEJS_22_X.name
+              : runtime === "nodejs20.x"
+              ? Runtime.NODEJS_20_X.name
+              : runtime === "nodejs16.x"
+              ? Runtime.NODEJS_16_X.name
+              : Runtime.NODEJS_18_X.name,
+          MemorySize:
+            typeof memorySize === "string"
+              ? toCdkSize(memorySize).toMebibytes()
+              : memorySize,
+          Timeout:
+            typeof timeout === "string"
+              ? toCdkDuration(timeout).toSeconds()
+              : timeout,
+          Role: this.role.roleArn,
+        },
+      },
+    });
+    return { fn, fnArn: fn.getAttString("FunctionArn") };
+  }
+>>>>>>> 69a1f60c4c9cd0bbc9d1e7bd7d257e0e6ca09eff
 
 	private updateFunctionInUsEast1(assetBucket: string, assetKey: string) {
 		const cfnLambda = this.functionCR.node.defaultChild as CfnCustomResource;
